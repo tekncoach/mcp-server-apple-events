@@ -198,10 +198,27 @@ describe('timeHelpers', () => {
     });
 
     it('should handle invalid date strings by returning original', () => {
-      const invalid = 'not-a-date';
-      const result = normalizeDueDateString(invalid);
+      const invalidDates = [
+        'not-a-date',
+        'invalid-date-format',
+        '2024-13-45', // Invalid month and day
+        '999999999999', // Extremely large number
+        'abc-123-def', // Mixed alphanumeric
+        // '', // Empty string - removed as normalizeDueDateString returns undefined for empty
+      ];
 
-      expect(result).toBe(invalid);
+      invalidDates.forEach((invalid) => {
+        const result = normalizeDueDateString(invalid);
+        // For invalid dates, the function should return the original input unchanged
+        expect(result).toBe(invalid);
+      });
+    });
+
+    it('should handle edge case when Date constructor returns Invalid Date but not NaN', () => {
+      // Create a case where getTime() returns NaN but the Date object is still created
+      const result = normalizeDueDateString('Invalid Date');
+      // This should return the original string since Date.getTime() returns NaN
+      expect(result).toBe('Invalid Date');
     });
 
     it('should use system timezone when not specified', () => {

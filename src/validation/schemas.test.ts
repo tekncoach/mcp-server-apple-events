@@ -438,6 +438,34 @@ describe('ValidationSchemas', () => {
     });
   });
 
+  describe('TodayOnlyDateSchema edge cases', () => {
+    it('should reject malformed date patterns that would cause parsing errors', () => {
+      const malformedDates = [
+        'invalid-date',
+        '2024-13-01', // Invalid month
+        '2024-02-30', // Invalid day
+        '20-24-01-01', // Invalid format
+        'abcd-ef-gh', // Non-numeric
+        '2024-12-ab', // Non-numeric components
+        '2024-ab-01', // Non-numeric components
+        'ab-12-01', // Non-numeric components
+      ];
+
+      malformedDates.forEach((dateString) => {
+        expect(() => TodayOnlyDateSchema.parse(dateString)).toThrow();
+      });
+    });
+
+    it('should handle extreme date values gracefully', () => {
+      const extremeDates = ['999999999-12-31', '-999999999-01-01'];
+
+      extremeDates.forEach((dateString) => {
+        // Should throw validation error but not crash with unhandled exception
+        expect(() => TodayOnlyDateSchema.parse(dateString)).toThrow();
+      });
+    });
+  });
+
   describe('ValidationError', () => {
     it('should create error with message', () => {
       const error = new ValidationError('Test validation error');

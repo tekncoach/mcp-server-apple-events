@@ -95,6 +95,21 @@ describe('binaryValidator', () => {
       );
     });
 
+    it('should allow paths with relative navigation within allowed directories', () => {
+      // Test multiple scenarios of relative paths that stay within bounds
+      const validPaths = [
+        '/project/dist/swift/bin/../bin/EventKitCLI', // normalizes to /project/dist/swift/bin/EventKitCLI
+      ];
+
+      mockFs.existsSync.mockImplementation((filepath): boolean => {
+        return filepath === '/project/dist/swift/bin/EventKitCLI';
+      });
+
+      validPaths.forEach((binaryPath) => {
+        expect(() => validateBinaryPath(binaryPath)).not.toThrow();
+      });
+    });
+
     it('should throw error for path not in allowed directories', () => {
       const binaryPath = '/usr/local/bin/malicious';
 

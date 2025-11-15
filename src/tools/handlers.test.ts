@@ -339,6 +339,140 @@ describe('Tool Handlers', () => {
       const content = _getTextContent(result.content);
       expect(content).toBe('Successfully deleted event with ID "event-789".');
     });
+
+    it('should format reminders with various properties', async () => {
+      const mockReminders = [
+        {
+          id: '1',
+          title: 'Basic Reminder',
+          isCompleted: false,
+          list: 'Personal',
+          notes: null,
+          dueDate: null,
+          url: null,
+        },
+        {
+          id: '2',
+          title: 'Full Reminder',
+          isCompleted: true,
+          list: 'Work',
+          notes: 'Important note\nSecond line',
+          dueDate: '2024-01-15T10:00:00Z',
+          url: 'https://example.com',
+        },
+      ];
+
+      mockReminderRepository.findReminders.mockResolvedValue(mockReminders);
+      const result = await handleReadReminders({ action: 'read' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('Basic Reminder');
+      expect(content).toContain('[ ] Basic Reminder'); // incomplete
+      expect(content).toContain('[x] Full Reminder'); // completed
+      expect(content).toContain('- List: Personal');
+      expect(content).toContain('- List: Work');
+      expect(content).toContain('- ID: 1');
+      expect(content).toContain('- ID: 2');
+      expect(content).toContain('- Due: 2024-01-15T10:00:00Z');
+      expect(content).toContain('- URL: https://example.com');
+    });
+
+    it('should format calendar events with all property combinations', async () => {
+      const mockEvents = [
+        {
+          id: 'evt-1',
+          title: 'Minimal Event',
+        },
+        {
+          id: 'evt-2',
+          title: 'Full Event',
+          calendar: 'Work',
+          startDate: '2025-11-15T09:00:00Z',
+          endDate: '2025-11-15T10:00:00Z',
+          isAllDay: true,
+          location: 'Conference Room',
+          notes: 'Meeting notes',
+          url: 'https://zoom.us/meeting',
+        },
+      ];
+
+      mockCalendarRepository.findEvents.mockResolvedValue(mockEvents);
+      const result = await handleReadCalendarEvents({ action: 'read' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('Minimal Event');
+      expect(content).toContain('Full Event');
+      expect(content).toContain('- Calendar: Work');
+      expect(content).toContain('- Start: 2025-11-15T09:00:00Z');
+      expect(content).toContain('- End: 2025-11-15T10:00:00Z');
+      expect(content).toContain('- All Day: true');
+      expect(content).toContain('- Location: Conference Room');
+      expect(content).toContain('- Notes: Meeting notes');
+      expect(content).toContain('- URL: https://zoom.us/meeting');
+    });
+  });
+
+  describe('formatDeleteMessage', () => {
+    it('should format message with default options', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('reminder', '123');
+
+      expect(result).toBe('Successfully deleted reminder with ID: "123".');
+    });
+
+    it('should format message without quotes', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('event', 'event-456', {
+        useQuotes: false,
+      });
+
+      expect(result).toBe('Successfully deleted event with ID: event-456.');
+    });
+
+    it('should format message without ID prefix', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('list', 'My List', {
+        useIdPrefix: false,
+      });
+
+      expect(result).toBe('Successfully deleted list "My List".');
+    });
+
+    it('should format message without period', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('task', 'task-789', {
+        usePeriod: false,
+      });
+
+      expect(result).toBe('Successfully deleted task with ID: "task-789"');
+    });
+
+    it('should format message with space separator instead of colon', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('reminder', '123', {
+        useColon: false,
+      });
+
+      expect(result).toBe('Successfully deleted reminder with ID "123".');
+    });
+
+    it('should format message with all options disabled', () => {
+      const { formatDeleteMessage } = require('./handlers/shared.js');
+
+      const result = formatDeleteMessage('item', 'identifier', {
+        useQuotes: false,
+        useIdPrefix: false,
+        usePeriod: false,
+        useColon: false,
+      });
+
+      expect(result).toBe('Successfully deleted item identifier');
+    });
   });
 
   describe('handleReadCalendarEvents', () => {

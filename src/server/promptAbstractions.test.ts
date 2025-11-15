@@ -197,7 +197,9 @@ describe('Confidence Action Formatting', () => {
     expect(formatted).toContain('MEDIUM CONFIDENCE (75%)');
     expect(formatted).toContain('RECOMMENDATION - Consider creating reminder');
     expect(formatted).toContain('Suggested tool call: reminders_tasks');
-    expect(formatted).toContain('Rationale: Seems relevant but needs confirmation');
+    expect(formatted).toContain(
+      'Rationale: Seems relevant but needs confirmation',
+    );
   });
 
   it('should format action with tool call and rationale', () => {
@@ -218,6 +220,54 @@ describe('Confidence Action Formatting', () => {
     expect(formatted).toContain('Tool: reminders_tasks');
     expect(formatted).toContain('Args:');
     expect(formatted).toContain('\nRationale: Task details need correction');
+  });
+
+  it('should format recommendation without tool call', () => {
+    const action = buildConfidenceAction({
+      percentage: 70,
+      action: 'Consider creating reminder',
+      rationale: 'Needs more context',
+      isRecommendation: true,
+    });
+
+    const formatted = formatConfidenceAction(action);
+    expect(formatted).toContain('MEDIUM CONFIDENCE (70%)');
+    expect(formatted).toContain('RECOMMENDATION - Consider creating reminder');
+    expect(formatted).not.toContain('Suggested tool call');
+    expect(formatted).toContain('Rationale: Needs more context');
+  });
+
+  it('should format execution action without tool call', () => {
+    const action = buildConfidenceAction({
+      percentage: 85,
+      action: 'Consider creating reminder',
+      rationale: 'Sufficient context available',
+    });
+
+    const formatted = formatConfidenceAction(action);
+    expect(formatted).toContain('HIGH CONFIDENCE (85%)');
+    expect(formatted).toContain('Consider creating reminder');
+    expect(formatted).not.toContain('Tool:');
+    expect(formatted).not.toContain('Args:');
+    expect(formatted).toContain('\nRationale: Sufficient context available');
+  });
+
+  it('should format execution action without rationale', () => {
+    const action = buildConfidenceAction({
+      percentage: 95,
+      action: 'Execute reminder creation',
+      toolCall: buildToolCall('reminders_tasks', {
+        action: 'create',
+        title: 'Test Task',
+      }),
+    });
+
+    const formatted = formatConfidenceAction(action);
+    expect(formatted).toContain('HIGH CONFIDENCE (95%)');
+    expect(formatted).toContain('Execute reminder creation');
+    expect(formatted).toContain('Tool: reminders_tasks');
+    expect(formatted).toContain('Args:');
+    expect(formatted).not.toContain('\nRationale:');
   });
 });
 

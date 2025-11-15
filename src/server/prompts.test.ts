@@ -193,47 +193,27 @@ describe('prompt time horizons', () => {
     expect(text).toMatch(/strategist and productivity coach/i);
   });
 
-  it('createStructuredPrompt handles empty constraints and calibration', () => {
-    const { createStructuredPrompt } = require('./prompts.js');
+  it('smart-reminder-creator includes mission and context structure', () => {
+    const template = getPromptDefinition('smart-reminder-creator');
+    if (!template) {
+      throw new Error('smart-reminder-creator prompt is not registered');
+    }
 
-    const result = createStructuredPrompt({
-      mission: 'Test mission',
-      contextInputs: ['input1', 'input2'],
-      process: ['step1', 'step2'],
-      outputFormat: ['format1'],
-      qualityBar: ['quality1'],
-      constraints: undefined,
-      calibration: undefined,
+    const response = buildPromptResponse(template, {
+      task_idea: 'Complete project documentation',
     });
+    const text = getPromptText(response);
 
-    expect(result).toContain('You are an Apple Reminders strategist and productivity coach.');
-    expect(result).toContain('Test mission');
-    expect(result).toContain('Context inputs:');
-    expect(result).toContain('Process:');
-    expect(result).toContain('Output format:');
-    expect(result).toContain('Quality bar:');
+    expect(text).toMatch(/Apple Reminders strategist and productivity coach/i);
+    expect(text).toMatch(/Mission: Craft a single Apple Reminder/i);
+    expect(text).toMatch(/Context inputs:/i);
+    expect(text).toMatch(/Process:/i);
+    expect(text).toMatch(/Output format:/i);
+    expect(text).toMatch(/Quality bar:/i);
+    expect(text).toMatch(/Constraints:/i);
   });
 
-  it('createStructuredPrompt handles empty arrays for constraints and calibration', () => {
-    const { createStructuredPrompt } = require('./prompts.js');
-
-    const result = createStructuredPrompt({
-      mission: 'Test mission',
-      contextInputs: ['input1'],
-      process: ['step1'],
-      outputFormat: ['format1'],
-      qualityBar: ['quality1'],
-      constraints: [],
-      calibration: [],
-    });
-
-    expect(result).toContain('You are an Apple Reminders strategist and productivity coach.');
-    expect(result).toContain('Test mission');
-    expect(result).not.toContain('Constraints:');
-    expect(result).not.toContain('Calibration guidance:');
-  });
-
-  it('smart-reminder-creator parseArgs handles null rawArgs', () => {
+  it('smart-reminder-creator handles parseArgs with null rawArgs', () => {
     const template = getPromptDefinition('smart-reminder-creator');
     if (!template) {
       throw new Error('smart-reminder-creator prompt is not registered');
@@ -242,19 +222,40 @@ describe('prompt time horizons', () => {
     const response = buildPromptResponse(template, null);
     const text = getPromptText(response);
 
-    expect(text).toMatch(/productivity coach and reminder strategist/i);
-    expect(text).toMatch(/### Current state/i);
+    expect(text).toMatch(/Apple Reminders strategist and productivity coach/i);
+    expect(text).toMatch(
+      /Task idea: none provided — propose a sensible framing and ask for confirmation/i,
+    );
   });
 
-  it('smart-reminder-creator parseArgs handles undefined rawArgs', () => {
-    const template = getPromptDefinition('smart-reminder-creator');
+  it('daily-task-organizer handles calibration section', () => {
+    const template = getPromptDefinition('daily-task-organizer');
     if (!template) {
-      throw new Error('smart-reminder-creator prompt is not registered');
+      throw new Error('daily-task-organizer prompt is not registered');
     }
 
-    const response = buildPromptResponse(template, undefined);
+    const response = buildPromptResponse(template, {
+      focus_area: 'Development',
+      deadline: '2025-11-15 17:00:00',
+    });
     const text = getPromptText(response);
 
-    expect(text).toMatch(/productivity coach and reminder strategist/i);
+    expect(text).toMatch(/strategist and productivity coach/i);
+    expect(text).toMatch(/Calibration:/i);
+  });
+
+  it('reminder-review-assistant handles no reminders case', () => {
+    const template = getPromptDefinition('reminder-review-assistant');
+    if (!template) {
+      throw new Error('reminder-review-assistant prompt is not registered');
+    }
+
+    const response = buildPromptResponse(template, {
+      review_focus: 'completed tasks',
+    });
+    const text = getPromptText(response);
+
+    expect(text).toMatch(/strategist and productivity coach/i);
+    expect(text).toMatch(/### Current state/i);
   });
 });

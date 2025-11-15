@@ -177,6 +177,21 @@ Dependencies:
       ]);
     });
 
+    it('should merge originalContent when both exist', () => {
+      const existing: NoteComponents = {
+        originalContent: 'Existing note content',
+      };
+
+      const updates: Partial<NoteComponents> = {
+        originalContent: 'Additional note content',
+      };
+
+      const merged = mergeNoteComponents(existing, updates);
+      expect(merged.originalContent).toBe(
+        'Existing note content\n\nAdditional note content',
+      );
+    });
+
     it('should deduplicate related reminders by ID', () => {
       const existing: NoteComponents = {
         relatedReminders: [

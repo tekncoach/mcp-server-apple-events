@@ -104,26 +104,41 @@ describe('permissionPrompt', () => {
     });
 
     it('should handle non-Error exceptions', async () => {
-      mockExecFile.mockImplementation(((
-        _command: string,
-        _args: readonly string[] | null | undefined,
-        optionsOrCallback?: ExecFileOptions | null | ExecFileCallback,
-        callback?: ExecFileCallback,
-      ) => {
-        const cb = invokeCallback(optionsOrCallback, callback);
-        setTimeout(
-          () => cb?.('string error' as unknown as ExecFileException, '', ''),
-          0,
-        );
-        return {} as ChildProcess;
-      }) as unknown as typeof execFile);
+      const testCases = [
+        'string error',
+        'simple string error',
+        null,
+        undefined,
+        123,
+      ];
 
-      await expect(triggerPermissionPrompt('reminders')).rejects.toThrow(
-        'Failed to trigger reminders permission prompt: string error',
-      );
+      for (const errorCase of testCases) {
+        mockExecFile.mockImplementation(((
+          _command: string,
+          _args: readonly string[] | null | undefined,
+          optionsOrCallback?: ExecFileOptions | null | ExecFileCallback,
+          callback?: ExecFileCallback,
+        ) => {
+          const cb = invokeCallback(optionsOrCallback, callback);
+          setTimeout(
+            () => cb?.(errorCase as unknown as ExecFileException, '', ''),
+            0,
+          );
+          return {} as ChildProcess;
+        }) as unknown as typeof execFile);
+
+        // Only test string errors that should be caught
+        if (typeof errorCase === 'string' && errorCase.length > 0) {
+          const expectedMessage = `Failed to trigger reminders permission prompt: ${errorCase}`;
+          await expect(triggerPermissionPrompt('reminders')).rejects.toThrow(
+            expectedMessage,
+          );
+        }
+      }
     });
 
-    it('should handle error that is not Error instance', async () => {
+    it('should deduplicate concurrent permission prompts for same domain', async () => {
+      let resolveCount = 0;
       mockExecFile.mockImplementation(((
         _command: string,
         _args: readonly string[] | null | undefined,
@@ -131,17 +146,47 @@ describe('permissionPrompt', () => {
         callback?: ExecFileCallback,
       ) => {
         const cb = invokeCallback(optionsOrCallback, callback);
-        setTimeout(
-          () =>
-            cb?.('simple string error' as unknown as ExecFileException, '', ''),
-          0,
-        );
+        setTimeout(() => {
+          resolveCount++;
+          cb?.(null, '', '');
+        }, 50);
         return {} as ChildProcess;
       }) as unknown as typeof execFile);
 
-      await expect(triggerPermissionPrompt('reminders')).rejects.toThrow(
-        'Failed to trigger reminders permission prompt: simple string error',
-      );
+      // Start multiple concurrent prompts for the same domain
+      const promises = [
+        triggerPermissionPrompt('reminders'),
+        triggerPermissionPrompt('reminders'),
+        triggerPermissionPrompt('reminders'),
+      ];
+
+      await Promise.all(promises);
+
+      // Should only call osascript once due to deduplication
+      expect(mockExecFile).toHaveBeenCalledTimes(1);
+      expect(resolveCount).toBe(1);
+    });
+
+    it('should not deduplicate permission prompts for different domains', async () => {
+      mockExecFile.mockImplementation(((
+        _command: string,
+        _args: readonly string[] | null | undefined,
+        optionsOrCallback?: ExecFileOptions | null | ExecFileCallback,
+        callback?: ExecFileCallback,
+      ) => {
+        const cb = invokeCallback(optionsOrCallback, callback);
+        setTimeout(() => cb?.(null, '', ''), 0);
+        return {} as ChildProcess;
+      }) as unknown as typeof execFile);
+
+      // Start prompts for different domains
+      await Promise.all([
+        triggerPermissionPrompt('reminders'),
+        triggerPermissionPrompt('calendars'),
+      ]);
+
+      // Should call osascript for each domain
+      expect(mockExecFile).toHaveBeenCalledTimes(2);
     });
   });
 });

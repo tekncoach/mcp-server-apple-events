@@ -247,5 +247,32 @@ describe('DateFiltering', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('2');
     });
+
+    it('should handle unknown dueWithin filter (default branch)', () => {
+      const allReminders: Reminder[] = [
+        {
+          id: '1',
+          title: 'Any reminder',
+          dueDate: '2024-01-15T10:00:00Z',
+          list: 'Default',
+          isCompleted: false,
+        },
+        {
+          id: '2',
+          title: 'Another reminder',
+          dueDate: '2024-01-16T10:00:00Z',
+          list: 'Default',
+          isCompleted: false,
+        },
+      ];
+
+      // Testing unknown filter value - using type assertion to bypass type checking
+      const filters = { dueWithin: 'unknown-filter' as any } as ReminderFilters;
+      const result = applyReminderFilters(allReminders, filters);
+
+      // Should return all reminders with due dates (default branch behavior)
+      expect(result).toHaveLength(2);
+      expect(result.map((r) => r.id)).toEqual(['1', '2']);
+    });
   });
 });
