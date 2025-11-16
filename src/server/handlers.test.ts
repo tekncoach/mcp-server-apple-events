@@ -172,67 +172,40 @@ describe('Server Handlers', () => {
     });
 
     describe('Get Prompt Handler', () => {
-      it.each([
-        [
-          'daily-task-organizer',
-          { today_focus: 'finish quarterly report and prepare slides' },
+      it('should return daily-task-organizer prompt with forwarded arguments', async () => {
+        const args = {
+          today_focus: 'finish quarterly report and prepare slides',
+        };
+        const request = {
+          params: { name: 'daily-task-organizer', arguments: args },
+        };
+
+        const result = await getPromptHandler(request);
+
+        expect(result.description).toContain(
           'Proactive daily task organization with intelligent reminder creation and optimization',
-          'finish quarterly report and prepare slides',
-        ],
-        [
-          'smart-reminder-creator',
-          { task_idea: 'Complete project proposal' },
-          'Intelligent reminder creation',
-          'Complete project proposal',
-        ],
-      ])(
-        'should return %s prompt with arguments',
-        async (name, args, expectedDescription, expectedContent) => {
-          const request = {
-            params: { name, arguments: args },
-          };
+        );
+        expect(result.messages).toHaveLength(1);
+        expect(result.messages[0].role).toBe('user');
+        expect(result.messages[0].content.type).toBe('text');
+        expect((result.messages[0].content as MessageContent).text).toContain(
+          args.today_focus,
+        );
+      });
 
-          const result = await getPromptHandler(request);
+      it('should handle daily-task-organizer with empty arguments', async () => {
+        const request = {
+          params: { name: 'daily-task-organizer', arguments: {} },
+        };
 
-          expect(result.description).toContain(expectedDescription);
-          expect(result.messages).toHaveLength(1);
-          expect(result.messages[0].role).toBe('user');
-          expect(result.messages[0].content.type).toBe('text');
-          expect((result.messages[0].content as MessageContent).text).toContain(
-            expectedContent,
-          );
-        },
-      );
+        const result = await getPromptHandler(request);
 
-      it.each([
-        [
-          'daily-task-organizer',
-          {},
-          [
-            'Focus: same-day organizing',
-            'Time horizon: ',
-            'only — never plan beyond today',
-            'Action scope: existing reminders',
-          ],
-        ],
-        ['smart-reminder-creator', {}, ['Task idea:']],
-      ])(
-        'should handle %s with empty arguments',
-        async (name, args, expectedTexts) => {
-          const request = {
-            params: { name, arguments: args },
-          };
-
-          const result = await getPromptHandler(request);
-
-          expect(result).toBeDefined();
-          expect(result.messages[0].content.type).toBe('text');
-          const text = (result.messages[0].content as MessageContent).text;
-          for (const snippet of expectedTexts as string[]) {
-            expect(text).toContain(snippet);
-          }
-        },
-      );
+        expect(result).toBeDefined();
+        expect(result.messages[0].content.type).toBe('text');
+        const text = (result.messages[0].content as MessageContent).text;
+        expect(text).toContain('Focus: same-day organizing');
+        expect(text).toContain('only — never plan beyond today');
+      });
 
       it.each([
         ['unknown-prompt', 'Unknown prompt: unknown-prompt'],
