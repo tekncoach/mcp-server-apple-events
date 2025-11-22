@@ -2,7 +2,6 @@
  * @fileoverview Swift CLI execution and JSON response parsing
  * @module utils/cliExecutor
  * @description Executes the EventKitCLI binary for native macOS EventKit operations
- * Handles permission errors with automatic retry mechanism and AppleScript prompts
  */
 
 import type { ExecFileException } from 'node:child_process';
@@ -57,7 +56,6 @@ const bufferToString = (data?: string | Buffer | null): string | null => {
   return data == null ? null : String(data);
 };
 
-
 const parseCliOutput = <T>(output: string): T => {
   let parsed: CliResponse<T>;
   try {
@@ -79,14 +77,14 @@ const runCli = async <T>(cliPath: string, args: string[]): Promise<T> => {
     if (!normalized) {
       throw new Error('EventKitCLI execution failed: Empty CLI output');
     }
-    return parseCliOutput(normalized, args);
+    return parseCliOutput(normalized);
   } catch (error) {
     const execError = error as ExecFileException & {
       stdout?: string | Buffer;
     };
     const normalized = bufferToString(execError?.stdout);
     if (normalized) {
-      return parseCliOutput(normalized, args);
+      return parseCliOutput(normalized);
     }
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`EventKitCLI execution failed: ${errorMessage}`);
@@ -94,15 +92,13 @@ const runCli = async <T>(cliPath: string, args: string[]): Promise<T> => {
 };
 
 /**
- * Executes the EventKitCLI binary with automatic permission handling and retry logic
+ * Executes the EventKitCLI binary for native macOS EventKit operations
  * @template T - Expected return type from the Swift CLI
  * @param {string[]} args - Array of arguments to pass to the CLI
  * @returns {Promise<T>} Parsed JSON result from the CLI
- * @throws {Error} If binary not found, validation fails, or CLI execution fails after retry
+ * @throws {Error} If binary not found, validation fails, or CLI execution fails
  * @description
  * - Locates binary using secure path validation
- * - Automatically handles permission errors with AppleScript prompts
- * - Retries once after permission grant
  * - Parses JSON response from Swift CLI
  * @example
  * const result = await executeCli<Reminder[]>(['--action', 'read', '--showCompleted', 'true']);
@@ -130,17 +126,5 @@ export async function executeCli<T>(args: string[]): Promise<T> {
     );
   }
 
-  let retried = false;
-  while (true) {
-    try {
-      return await runCli<T>(cliPath, args);
-    } catch (error) {
-      if (!retried && error instanceof CliPermissionError) {
-        retried = true;
-        await triggerPermissionPrompt(error.domain);
-        continue;
-      }
-      throw error;
-    }
-  }
+  return await runCli<T>(cliPath, args);
 }
