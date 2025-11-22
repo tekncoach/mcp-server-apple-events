@@ -7,7 +7,6 @@ import {
   formatRelativeTime,
   getFuzzyTimeSuggestions,
   getTimeContext,
-  normalizeDueDateString,
 } from './timeHelpers.js';
 
 describe('timeHelpers', () => {
@@ -173,58 +172,6 @@ describe('timeHelpers', () => {
         parseInt(context.currentTime.split(':')[1], 10),
       ).toBeGreaterThanOrEqual(0);
       expect(parseInt(context.currentTime.split(':')[1], 10)).toBeLessThan(60);
-    });
-  });
-
-  describe('normalizeDueDateString', () => {
-    it('should convert ISO timestamps with timezone to local format', () => {
-      const result = normalizeDueDateString('2025-11-15T08:30:00Z', {
-        timeZone: 'Asia/Shanghai',
-      });
-
-      expect(result).toBe('2025-11-15 16:30:00');
-    });
-
-    it('should return original string when already in local format', () => {
-      const original = '2025-11-14 16:30:00';
-      const result = normalizeDueDateString(original);
-
-      expect(result).toBe(original);
-    });
-
-    it('should handle undefined values gracefully', () => {
-      expect(normalizeDueDateString(undefined)).toBeUndefined();
-      expect(normalizeDueDateString(null)).toBeUndefined();
-    });
-
-    it('should handle invalid date strings by returning original', () => {
-      const invalidDates = [
-        'not-a-date',
-        'invalid-date-format',
-        '2024-13-45', // Invalid month and day
-        '999999999999', // Extremely large number
-        'abc-123-def', // Mixed alphanumeric
-        // '', // Empty string - removed as normalizeDueDateString returns undefined for empty
-      ];
-
-      invalidDates.forEach((invalid) => {
-        const result = normalizeDueDateString(invalid);
-        // For invalid dates, the function should return the original input unchanged
-        expect(result).toBe(invalid);
-      });
-    });
-
-    it('should handle edge case when Date constructor returns Invalid Date but not NaN', () => {
-      // Create a case where getTime() returns NaN but the Date object is still created
-      const result = normalizeDueDateString('Invalid Date');
-      // This should return the original string since Date.getTime() returns NaN
-      expect(result).toBe('Invalid Date');
-    });
-
-    it('should use system timezone when not specified', () => {
-      const result = normalizeDueDateString('2025-11-15T08:30:00Z');
-
-      expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
     });
   });
 

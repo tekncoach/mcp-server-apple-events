@@ -232,34 +232,3 @@ function formatDateWithTimeZone(
   };
 }
 
-const ISO_TIMEZONE_PATTERN = /([+-]\d{2}:?\d{2}|Z)$/i;
-
-export interface NormalizeDueDateOptions {
-  timeZone?: string;
-}
-
-export function normalizeDueDateString(
-  dueDate?: string | null,
-  options: NormalizeDueDateOptions = {},
-): string | undefined {
-  if (!dueDate) {
-    return undefined;
-  }
-
-  if (!ISO_TIMEZONE_PATTERN.test(dueDate)) {
-    return dueDate;
-  }
-
-  const parsedDate = new Date(dueDate);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return dueDate;
-  }
-
-  const resolvedTimeZone =
-    options.timeZone ??
-    Intl.DateTimeFormat().resolvedOptions().timeZone ??
-    'UTC';
-
-  const parts = formatDateWithTimeZone(parsedDate, resolvedTimeZone);
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
-}
