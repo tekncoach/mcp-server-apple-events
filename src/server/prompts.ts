@@ -204,7 +204,7 @@ const buildDailyTaskOrganizerPrompt = (
             'Actions respect the confidence-gating policy and each entry states its confidence and rationale.',
             'Calendar tool is used for every ≥60-minute task confirmed for today (no placeholders).',
             'Deep work blocks follow the shared deep-work guidelines (≥60 minutes, ideal 90-120, max 4 hours total) and shallow tasks stay 15-60 minutes with batching hints.',
-            `All due dates labeled "today" use ${TIME_FORMAT_SPEC} format (e.g., ${timeContext.currentDate} 14:00:00-05:00).`,
+            `All due dates labeled "today" use ${TIME_FORMAT_SPEC} format (e.g., "${timeContext.currentDate} 14:00:00-05:00").`,
             'Out-of-scope section quickly explains what was skipped and why.',
           ],
           calibration: [
