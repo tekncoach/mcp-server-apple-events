@@ -50,7 +50,7 @@ describe('prompt templates', () => {
         /Shallow tasks stay 15-60 minutes/i,
         /automatic ~20% buffer/i,
         /anchor to due times/i,
-        /format.*\d{4}-\d{2}-\d{2} HH:mm:ss/i,
+        /format.*\d{4}-\d{2}-\d{2} HH:mm:ss[+-]\d{2}:\d{2}|YYYY-MM-DD HH:mm:ss±HH:MM/i,
         /Deep Work — \[Project/i,
         /Plan 2 blocks per day|2 blocks per day/i,
         /Break intervals: 15-30 minutes between blocks/i,
