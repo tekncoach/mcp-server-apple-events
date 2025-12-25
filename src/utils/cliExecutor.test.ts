@@ -444,10 +444,8 @@ describe('cliExecutor', () => {
         const cb = invokeCallback(optionsOrCallback, callback);
         callCount++;
         if (callCount === 1) {
-          // First call: permission denied
           cb?.(null, permissionError, '');
         } else {
-          // Second call after permission prompt: success
           cb?.(null, successResponse, '');
         }
         return {} as ChildProcess;
@@ -489,10 +487,8 @@ describe('cliExecutor', () => {
         const cb = invokeCallback(optionsOrCallback, callback);
         callCount++;
         if (callCount === 1) {
-          // First call: permission denied
           cb?.(null, permissionError, '');
         } else {
-          // Second call after permission prompt: success
           cb?.(null, successResponse, '');
         }
         return {} as ChildProcess;
@@ -570,7 +566,6 @@ describe('cliExecutor', () => {
       );
 
       expect(mockExecFile).toHaveBeenCalledTimes(1);
-      // Proactive prompt is still called once at the start, but not retried
       expect(mockTriggerPermissionPrompt).toHaveBeenCalledTimes(1);
       expect(mockTriggerPermissionPrompt).toHaveBeenCalledWith('reminders');
     });
@@ -598,7 +593,6 @@ describe('cliExecutor', () => {
       const result = await executeCli(['--action', 'read', '--id', '123']);
 
       expect(result).toEqual({ id: '123', title: 'Test reminder' });
-      // Permission prompt should NOT be called because hasBeenPrompted returns true
       expect(mockTriggerPermissionPrompt).not.toHaveBeenCalled();
       expect(mockExecFile).toHaveBeenCalledTimes(1);
     });
@@ -622,7 +616,6 @@ describe('cliExecutor', () => {
 
       await executeCli(['--action', 'read-events']);
 
-      // Should proactively trigger calendars permission
       expect(mockTriggerPermissionPrompt).toHaveBeenCalledWith('calendars');
     });
   });

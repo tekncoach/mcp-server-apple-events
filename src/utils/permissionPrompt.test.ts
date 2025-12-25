@@ -118,7 +118,6 @@ describe('permissionPrompt', () => {
       expect(hasBeenPrompted('reminders')).toBe(true);
       expect(mockExecFile).toHaveBeenCalledTimes(1);
 
-      // Second call should be skipped
       await triggerPermissionPrompt('reminders');
       expect(mockExecFile).toHaveBeenCalledTimes(1);
     });
