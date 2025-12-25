@@ -133,35 +133,29 @@ describe('permissionPrompt', () => {
         return {} as ChildProcess;
       }) as unknown as typeof execFile);
 
-      // First call: normal prompt
       await triggerPermissionPrompt('reminders');
       expect(mockExecFile).toHaveBeenCalledTimes(1);
       expect(hasBeenPrompted('reminders')).toBe(true);
 
-      // Second call without force: should be skipped
       await triggerPermissionPrompt('reminders');
       expect(mockExecFile).toHaveBeenCalledTimes(1);
 
-      // Third call with force: should execute despite being already prompted
       await triggerPermissionPrompt('reminders', true);
       expect(mockExecFile).toHaveBeenCalledTimes(2);
     });
 
     it('prevents race condition with concurrent calls to the same domain', async () => {
-      // Simulate async delay to expose race condition
       mockExecFile.mockImplementation(((
         _command: string,
         _args: readonly string[] | null | undefined,
         callback?: ExecFileCallback,
       ) => {
-        // Delay callback to allow concurrent calls to pass the check before any completes
         setTimeout(() => {
           callback?.(null, '', '');
         }, 10);
         return {} as ChildProcess;
       }) as unknown as typeof execFile);
 
-      // Trigger multiple concurrent calls - all should check promptedDomains before any completes
       const promises = [
         triggerPermissionPrompt('reminders'),
         triggerPermissionPrompt('reminders'),
@@ -170,8 +164,6 @@ describe('permissionPrompt', () => {
 
       await Promise.all(promises);
 
-      // Should only execute once despite concurrent calls
-      // The domain should be added immediately after the check, preventing duplicate executions
       expect(mockExecFile).toHaveBeenCalledTimes(1);
       expect(hasBeenPrompted('reminders')).toBe(true);
     });

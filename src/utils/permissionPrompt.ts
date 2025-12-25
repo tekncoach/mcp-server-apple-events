@@ -36,8 +36,6 @@ export async function triggerPermissionPrompt(
     return;
   }
 
-  // Add domain immediately after check to prevent race condition with concurrent calls
-  // This ensures only one execFileAsync call happens even if multiple calls pass the check
   if (!force) {
     promptedDomains.add(domain);
   }
@@ -46,13 +44,10 @@ export async function triggerPermissionPrompt(
 
   try {
     await execFileAsync('osascript', ['-e', script]);
-    // Mark as prompted if force=true (already marked if force=false)
     if (force) {
       promptedDomains.add(domain);
     }
   } catch {
-    // Mark as prompted even on error to avoid infinite retry loops
-    // The error might be due to permission denial, which we'll handle downstream
     if (force) {
       promptedDomains.add(domain);
     }
