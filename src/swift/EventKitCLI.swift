@@ -1,6 +1,7 @@
 import Foundation
 import Dispatch
 import EventKit
+import CoreLocation
 
 // MARK: - Output Structures & JSON Models
 struct StandardOutput<T: Codable>: Codable { let status = "success"; let result: T }
@@ -8,7 +9,8 @@ struct ErrorOutput: Codable { let status = "error"; let message: String }
 struct ReadResult: Codable { let lists: [ListJSON]; let reminders: [ReminderJSON] }
 struct DeleteResult: Codable { let id: String; let deleted = true }
 struct DeleteListResult: Codable { let title: String; let deleted = true }
-struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int?, completionDate: String? }
+struct GeofenceJSON: Codable { let title: String, latitude: Double, longitude: Double, radius: Double, proximity: String }
+struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int?, completionDate: String?, geofence: GeofenceJSON? }
 struct ListJSON: Codable { let id: String, title: String }
 struct EventJSON: Codable { let id: String, title: String, calendar: String, startDate: String, endDate: String, notes: String?, location: String?, url: String?, isAllDay: Bool }
 struct CalendarJSON: Codable { let id: String, title: String }
@@ -232,7 +234,7 @@ class RemindersManager {
         return filtered.map { $0.toJSON() }
     }
 
-    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?, isCompleted: Bool?) throws -> ReminderJSON {
+    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?, isCompleted: Bool?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?) throws -> ReminderJSON {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = try findList(named: listName)
         reminder.title = title
@@ -264,18 +266,35 @@ class RemindersManager {
             }
         }
         if let completed = isCompleted { reminder.isCompleted = completed }
+
+        // Handle geofence: create location-based alarm
+        if let geoTitle = geofenceTitle,
+           let lat = geofenceLatitude,
+           let lng = geofenceLongitude,
+           let proximityStr = geofenceProximity {
+            let location = EKStructuredLocation(title: geoTitle)
+            location.geoLocation = CLLocation(latitude: lat, longitude: lng)
+            if let radius = geofenceRadius, radius > 0 {
+                location.radius = radius
+            }
+            let alarm = EKAlarm()
+            alarm.structuredLocation = location
+            alarm.proximity = proximityStr == "leave" ? .leave : .enter
+            reminder.addAlarm(alarm)
+        }
+
         try eventStore.save(reminder, commit: true)
         return reminder.toJSON()
     }
 
-    func updateReminder(id: String, newTitle: String?, listName: String?, notes: String?, urlString: String?, isCompleted: Bool?, dueDateString: String?, priority: Int?) throws -> ReminderJSON {
+    func updateReminder(id: String, newTitle: String?, listName: String?, notes: String?, urlString: String?, isCompleted: Bool?, dueDateString: String?, priority: Int?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?) throws -> ReminderJSON {
         guard let reminder = findReminder(withId: id) else { throw NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "ID '\(id)' not found."]) }
         if let newTitle = newTitle { reminder.title = newTitle }
         if let priority = priority { reminder.priority = priority }
-        
+
         // Handle URL: store in both URL field and append to notes
         var finalNotes: String?
-        
+
         if let urlStr = urlString, !urlStr.isEmpty, let url = URL(string: urlStr) {
             reminder.url = url  // Store single URL in URL field
             // If new notes provided and doesn't contain URL, append URL to new notes
@@ -307,9 +326,9 @@ class RemindersManager {
             // No URL and no new notes, keep existing notes
             finalNotes = reminder.notes
         }
-        
+
         if let finalNotes = finalNotes { reminder.notes = finalNotes }
-        
+
         if let isCompleted = isCompleted { reminder.isCompleted = isCompleted }
         if let listName = listName { reminder.calendar = try findList(named: listName) }
         if let dateStr = dueDateString {
@@ -321,6 +340,30 @@ class RemindersManager {
                 reminder.timeZone = nil
             }
         }
+
+        // Handle geofence: add or update location-based alarm
+        if let geoTitle = geofenceTitle,
+           let lat = geofenceLatitude,
+           let lng = geofenceLongitude,
+           let proximityStr = geofenceProximity {
+            // Remove existing location-based alarms
+            if let alarms = reminder.alarms {
+                for alarm in alarms where alarm.structuredLocation != nil {
+                    reminder.removeAlarm(alarm)
+                }
+            }
+            // Add new geofence alarm
+            let location = EKStructuredLocation(title: geoTitle)
+            location.geoLocation = CLLocation(latitude: lat, longitude: lng)
+            if let radius = geofenceRadius, radius > 0 {
+                location.radius = radius
+            }
+            let alarm = EKAlarm()
+            alarm.structuredLocation = location
+            alarm.proximity = proximityStr == "leave" ? .leave : .enter
+            reminder.addAlarm(alarm)
+        }
+
         try eventStore.save(reminder, commit: true)
         return reminder.toJSON()
     }
@@ -529,6 +572,29 @@ extension EKReminder {
         }()
     }
 
+    func getGeofence() -> GeofenceJSON? {
+        guard let alarms = self.alarms else { return nil }
+        for alarm in alarms {
+            if let location = alarm.structuredLocation,
+               let geoLocation = location.geoLocation {
+                let proximityStr: String
+                switch alarm.proximity {
+                case .enter: proximityStr = "enter"
+                case .leave: proximityStr = "leave"
+                default: proximityStr = "enter"
+                }
+                return GeofenceJSON(
+                    title: location.title ?? "",
+                    latitude: geoLocation.coordinate.latitude,
+                    longitude: geoLocation.coordinate.longitude,
+                    radius: location.radius > 0 ? location.radius : 100,
+                    proximity: proximityStr
+                )
+            }
+        }
+        return nil
+    }
+
     func toJSON() -> ReminderJSON {
         let completionDateStr = self.completionDate.map { Static.completionDateFormatter.string(from: $0) }
         return ReminderJSON(
@@ -540,7 +606,8 @@ extension EKReminder {
             url: self.url?.absoluteString,
             dueDate: formatDueDateWithTimezone(from: self.dueDateComponents, timeZoneHint: self.timeZone),
             priority: self.priority > 0 ? self.priority : nil,
-            completionDate: completionDateStr
+            completionDate: completionDateStr,
+            geofence: self.getGeofence()
         )
     }
 }
@@ -656,12 +723,39 @@ func main() {
                 guard let title = parser.get("title") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--title required."]) }
                 let priority = parser.get("priority").flatMap { Int($0) }
                 let isCompleted = parser.get("isCompleted").map { $0 == "true" }
-                let reminder = try manager.createReminder(title: title, listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), dueDateString: parser.get("dueDate"), priority: priority, isCompleted: isCompleted)
+                let reminder = try manager.createReminder(
+                    title: title,
+                    listName: parser.get("targetList"),
+                    notes: parser.get("note"),
+                    urlString: parser.get("url"),
+                    dueDateString: parser.get("dueDate"),
+                    priority: priority,
+                    isCompleted: isCompleted,
+                    geofenceTitle: parser.get("geofenceTitle"),
+                    geofenceLatitude: parser.get("geofenceLatitude").flatMap { Double($0) },
+                    geofenceLongitude: parser.get("geofenceLongitude").flatMap { Double($0) },
+                    geofenceRadius: parser.get("geofenceRadius").flatMap { Double($0) },
+                    geofenceProximity: parser.get("geofenceProximity")
+                )
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "update":
                 guard let id = parser.get("id") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--id required."]) }
                 let priority = parser.get("priority").flatMap { Int($0) }
-                let reminder = try manager.updateReminder(id: id, newTitle: parser.get("title"), listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), isCompleted: parser.get("isCompleted").map { $0 == "true" }, dueDateString: parser.get("dueDate"), priority: priority)
+                let reminder = try manager.updateReminder(
+                    id: id,
+                    newTitle: parser.get("title"),
+                    listName: parser.get("targetList"),
+                    notes: parser.get("note"),
+                    urlString: parser.get("url"),
+                    isCompleted: parser.get("isCompleted").map { $0 == "true" },
+                    dueDateString: parser.get("dueDate"),
+                    priority: priority,
+                    geofenceTitle: parser.get("geofenceTitle"),
+                    geofenceLatitude: parser.get("geofenceLatitude").flatMap { Double($0) },
+                    geofenceLongitude: parser.get("geofenceLongitude").flatMap { Double($0) },
+                    geofenceRadius: parser.get("geofenceRadius").flatMap { Double($0) },
+                    geofenceProximity: parser.get("geofenceProximity")
+                )
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "delete":
                 guard let id = parser.get("id") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--id required."]) }

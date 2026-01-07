@@ -7,6 +7,14 @@
  * JSON interfaces matching the output from EventKitCLI
  */
 
+export interface GeofenceJSON {
+  title: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  proximity: string;
+}
+
 export interface ReminderJSON {
   id: string;
   title: string;
@@ -17,6 +25,7 @@ export interface ReminderJSON {
   dueDate: string | null;
   priority: number | null;
   completionDate: string | null;
+  geofence: GeofenceJSON | null;
 }
 
 export interface ListJSON {
@@ -67,6 +76,11 @@ export interface CreateReminderData {
   dueDate?: string;
   priority?: number;
   isCompleted?: boolean;
+  geofenceTitle?: string;
+  geofenceLatitude?: number;
+  geofenceLongitude?: number;
+  geofenceRadius?: number;
+  geofenceProximity?: string;
 }
 
 export interface UpdateReminderData {
@@ -78,6 +92,11 @@ export interface UpdateReminderData {
   isCompleted?: boolean;
   dueDate?: string;
   priority?: number;
+  geofenceTitle?: string;
+  geofenceLatitude?: number;
+  geofenceLongitude?: number;
+  geofenceRadius?: number;
+  geofenceProximity?: string;
 }
 
 export interface CreateEventData {

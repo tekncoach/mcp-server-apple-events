@@ -4,7 +4,7 @@
  */
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { RemindersToolArgs } from '../../types/index.js';
+import type { Geofence, RemindersToolArgs } from '../../types/index.js';
 import { handleAsyncOperation } from '../../utils/errorHandling.js';
 import { formatMultilineNotes } from '../../utils/helpers.js';
 import { reminderRepository } from '../../utils/reminderRepository.js';
@@ -20,6 +20,14 @@ import {
   formatListMarkdown,
   formatSuccessMessage,
 } from './shared.js';
+
+/**
+ * Formats a geofence as a human-readable string
+ */
+const formatGeofence = (geofence: Geofence): string => {
+  const action = geofence.proximity === 'leave' ? 'leaving' : 'arriving at';
+  return `When ${action} "${geofence.title}" (${geofence.latitude.toFixed(4)}, ${geofence.longitude.toFixed(4)}, ${geofence.radius}m)`;
+};
 
 /**
  * Formats a reminder object as markdown list items
@@ -44,6 +52,7 @@ const formatReminderMarkdown = (reminder: {
   url?: string;
   priority?: number;
   completionDate?: string;
+  geofence?: Geofence;
 }): string[] => {
   const lines: string[] = [];
   const checkbox = reminder.isCompleted ? '[x]' : '[ ]';
@@ -57,6 +66,8 @@ const formatReminderMarkdown = (reminder: {
   if (reminder.dueDate) lines.push(`  - Due: ${reminder.dueDate}`);
   if (reminder.completionDate)
     lines.push(`  - Completed: ${reminder.completionDate}`);
+  if (reminder.geofence)
+    lines.push(`  - Location: ${formatGeofence(reminder.geofence)}`);
   if (reminder.url) lines.push(`  - URL: ${reminder.url}`);
   return lines;
 };
@@ -74,6 +85,11 @@ export const handleCreateReminder = async (
       dueDate: validatedArgs.dueDate,
       priority: validatedArgs.priority,
       isCompleted: validatedArgs.completed,
+      geofenceTitle: validatedArgs.geofenceTitle,
+      geofenceLatitude: validatedArgs.geofenceLatitude,
+      geofenceLongitude: validatedArgs.geofenceLongitude,
+      geofenceRadius: validatedArgs.geofenceRadius,
+      geofenceProximity: validatedArgs.geofenceProximity,
     });
     return formatSuccessMessage(
       'created',
@@ -98,6 +114,11 @@ export const handleUpdateReminder = async (
       list: validatedArgs.targetList,
       dueDate: validatedArgs.dueDate,
       priority: validatedArgs.priority,
+      geofenceTitle: validatedArgs.geofenceTitle,
+      geofenceLatitude: validatedArgs.geofenceLatitude,
+      geofenceLongitude: validatedArgs.geofenceLongitude,
+      geofenceRadius: validatedArgs.geofenceRadius,
+      geofenceProximity: validatedArgs.geofenceProximity,
     });
     return formatSuccessMessage(
       'updated',

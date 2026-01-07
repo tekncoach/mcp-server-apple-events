@@ -4,6 +4,17 @@
  */
 
 /**
+ * Geofence for location-based reminders
+ */
+export interface Geofence {
+  title: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  proximity: 'enter' | 'leave';
+}
+
+/**
  * Reminder item interface
  */
 export interface Reminder {
@@ -16,6 +27,7 @@ export interface Reminder {
   isCompleted: boolean;
   priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
   completionDate?: string; // Date when reminder was completed (read-only)
+  geofence?: Geofence;
 }
 
 /**
@@ -132,6 +144,12 @@ export interface RemindersToolArgs extends BaseToolArgs {
   priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
   // Target list for create/update operations
   targetList?: string;
+  // Geofence parameters for location-based reminders
+  geofenceTitle?: string;
+  geofenceLatitude?: number;
+  geofenceLongitude?: number;
+  geofenceRadius?: number;
+  geofenceProximity?: 'enter' | 'leave';
 }
 
 export interface ListsToolArgs extends BaseToolArgs {

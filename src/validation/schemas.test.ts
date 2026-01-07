@@ -11,8 +11,13 @@ import {
   ReadRemindersSchema,
   RequiredListNameSchema,
   SafeDateSchema,
+  SafeGeofenceTitleSchema,
+  SafeLatitudeSchema,
+  SafeLongitudeSchema,
   SafeNoteSchema,
   SafePrioritySchema,
+  SafeProximitySchema,
+  SafeRadiusSchema,
   SafeTextSchema,
   SafeUrlSchema,
   UpdateReminderListSchema,
@@ -176,6 +181,90 @@ describe('ValidationSchemas', () => {
         expect(() => SafePrioritySchema.parse(5.5)).toThrow();
       });
     });
+
+    describe('Geofence schemas', () => {
+      describe('SafeGeofenceTitleSchema', () => {
+        it('should validate optional geofence titles', () => {
+          expect(() => SafeGeofenceTitleSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeGeofenceTitleSchema.parse('Home')).not.toThrow();
+          expect(() => SafeGeofenceTitleSchema.parse('Office')).not.toThrow();
+          expect(() =>
+            SafeGeofenceTitleSchema.parse('My Favorite Coffee Shop'),
+          ).not.toThrow();
+        });
+
+        it('should reject titles that are too long', () => {
+          const longTitle = 'a'.repeat(201);
+          expect(() => SafeGeofenceTitleSchema.parse(longTitle)).toThrow();
+        });
+      });
+
+      describe('SafeLatitudeSchema', () => {
+        it('should validate valid latitudes', () => {
+          expect(() => SafeLatitudeSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeLatitudeSchema.parse(0)).not.toThrow();
+          expect(() => SafeLatitudeSchema.parse(37.7749)).not.toThrow();
+          expect(() => SafeLatitudeSchema.parse(-33.8688)).not.toThrow();
+          expect(() => SafeLatitudeSchema.parse(90)).not.toThrow();
+          expect(() => SafeLatitudeSchema.parse(-90)).not.toThrow();
+        });
+
+        it('should reject latitudes out of range', () => {
+          expect(() => SafeLatitudeSchema.parse(90.1)).toThrow();
+          expect(() => SafeLatitudeSchema.parse(-90.1)).toThrow();
+          expect(() => SafeLatitudeSchema.parse(180)).toThrow();
+          expect(() => SafeLatitudeSchema.parse(-180)).toThrow();
+        });
+      });
+
+      describe('SafeLongitudeSchema', () => {
+        it('should validate valid longitudes', () => {
+          expect(() => SafeLongitudeSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeLongitudeSchema.parse(0)).not.toThrow();
+          expect(() => SafeLongitudeSchema.parse(-122.4194)).not.toThrow();
+          expect(() => SafeLongitudeSchema.parse(151.2093)).not.toThrow();
+          expect(() => SafeLongitudeSchema.parse(180)).not.toThrow();
+          expect(() => SafeLongitudeSchema.parse(-180)).not.toThrow();
+        });
+
+        it('should reject longitudes out of range', () => {
+          expect(() => SafeLongitudeSchema.parse(180.1)).toThrow();
+          expect(() => SafeLongitudeSchema.parse(-180.1)).toThrow();
+          expect(() => SafeLongitudeSchema.parse(360)).toThrow();
+        });
+      });
+
+      describe('SafeRadiusSchema', () => {
+        it('should validate valid radius values', () => {
+          expect(() => SafeRadiusSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeRadiusSchema.parse(100)).not.toThrow();
+          expect(() => SafeRadiusSchema.parse(1000)).not.toThrow();
+          expect(() => SafeRadiusSchema.parse(100000)).not.toThrow();
+        });
+
+        it('should reject radius values out of range', () => {
+          expect(() => SafeRadiusSchema.parse(0)).toThrow();
+          expect(() => SafeRadiusSchema.parse(1)).toThrow();
+          expect(() => SafeRadiusSchema.parse(99)).toThrow();
+          expect(() => SafeRadiusSchema.parse(-1)).toThrow();
+          expect(() => SafeRadiusSchema.parse(100001)).toThrow();
+        });
+      });
+
+      describe('SafeProximitySchema', () => {
+        it('should validate valid proximity values', () => {
+          expect(() => SafeProximitySchema.parse(undefined)).not.toThrow();
+          expect(() => SafeProximitySchema.parse('enter')).not.toThrow();
+          expect(() => SafeProximitySchema.parse('leave')).not.toThrow();
+        });
+
+        it('should reject invalid proximity values', () => {
+          expect(() => SafeProximitySchema.parse('arrive')).toThrow();
+          expect(() => SafeProximitySchema.parse('depart')).toThrow();
+          expect(() => SafeProximitySchema.parse('unknown')).toThrow();
+        });
+      });
+    });
   });
 
   describe('Tool-specific schemas', () => {
@@ -191,6 +280,11 @@ describe('ValidationSchemas', () => {
             url: 'https://example.com',
             targetList: 'Work',
             completed: true, // Bug fix: completed is now supported on create
+            geofenceTitle: 'Home',
+            geofenceLatitude: 37.7749,
+            geofenceLongitude: -122.4194,
+            geofenceRadius: 100,
+            geofenceProximity: 'enter',
           },
           minimalInput: { title: 'Test reminder' },
           requiredFields: ['title'],
@@ -206,6 +300,11 @@ describe('ValidationSchemas', () => {
             url: 'https://example.com',
             completed: false,
             targetList: 'Work',
+            geofenceTitle: 'Office',
+            geofenceLatitude: 40.7128,
+            geofenceLongitude: -74.006,
+            geofenceRadius: 200,
+            geofenceProximity: 'leave',
           },
           minimalInput: { id: '123' },
           requiredFields: ['id'],

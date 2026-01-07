@@ -14,6 +14,7 @@ import type {
 import { executeCli } from './cliExecutor.js';
 import type { ReminderFilters } from './dateFiltering.js';
 import { applyReminderFilters } from './dateFiltering.js';
+import type { Geofence } from '../types/index.js';
 import {
   addOptionalArg,
   addOptionalBooleanArg,
@@ -22,6 +23,17 @@ import {
 } from './helpers.js';
 
 class ReminderRepository {
+  private mapGeofence(geofence: ReminderJSON['geofence']): Geofence | undefined {
+    if (!geofence) return undefined;
+    return {
+      title: geofence.title,
+      latitude: geofence.latitude,
+      longitude: geofence.longitude,
+      radius: geofence.radius,
+      proximity: geofence.proximity === 'leave' ? 'leave' : 'enter',
+    };
+  }
+
   private mapReminder(reminder: ReminderJSON): Reminder {
     const normalizedReminder = nullToUndefined(reminder, [
       'notes',
@@ -49,6 +61,12 @@ class ReminderRepository {
       normalizedReminder.completionDate = reminder.completionDate;
     } else {
       delete normalizedReminder.completionDate;
+    }
+
+    // Map geofence if present
+    const geofence = this.mapGeofence(reminder.geofence);
+    if (geofence) {
+      normalizedReminder.geofence = geofence;
     }
 
     return normalizedReminder;
@@ -95,6 +113,12 @@ class ReminderRepository {
     addOptionalArg(args, '--dueDate', data.dueDate);
     addOptionalNumberArg(args, '--priority', data.priority);
     addOptionalBooleanArg(args, '--isCompleted', data.isCompleted);
+    // Geofence parameters
+    addOptionalArg(args, '--geofenceTitle', data.geofenceTitle);
+    addOptionalNumberArg(args, '--geofenceLatitude', data.geofenceLatitude);
+    addOptionalNumberArg(args, '--geofenceLongitude', data.geofenceLongitude);
+    addOptionalNumberArg(args, '--geofenceRadius', data.geofenceRadius);
+    addOptionalArg(args, '--geofenceProximity', data.geofenceProximity);
 
     return executeCli<ReminderJSON>(args);
   }
@@ -108,6 +132,12 @@ class ReminderRepository {
     addOptionalArg(args, '--dueDate', data.dueDate);
     addOptionalBooleanArg(args, '--isCompleted', data.isCompleted);
     addOptionalNumberArg(args, '--priority', data.priority);
+    // Geofence parameters
+    addOptionalArg(args, '--geofenceTitle', data.geofenceTitle);
+    addOptionalNumberArg(args, '--geofenceLatitude', data.geofenceLatitude);
+    addOptionalNumberArg(args, '--geofenceLongitude', data.geofenceLongitude);
+    addOptionalNumberArg(args, '--geofenceRadius', data.geofenceRadius);
+    addOptionalArg(args, '--geofenceProximity', data.geofenceProximity);
 
     return executeCli<ReminderJSON>(args);
   }
