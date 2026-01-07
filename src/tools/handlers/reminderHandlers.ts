@@ -43,6 +43,7 @@ const formatReminderMarkdown = (reminder: {
   dueDate?: string;
   url?: string;
   priority?: number;
+  completionDate?: string;
 }): string[] => {
   const lines: string[] = [];
   const checkbox = reminder.isCompleted ? '[x]' : '[ ]';
@@ -54,6 +55,8 @@ const formatReminderMarkdown = (reminder: {
   if (reminder.notes)
     lines.push(`  - Notes: ${formatMultilineNotes(reminder.notes)}`);
   if (reminder.dueDate) lines.push(`  - Due: ${reminder.dueDate}`);
+  if (reminder.completionDate)
+    lines.push(`  - Completed: ${reminder.completionDate}`);
   if (reminder.url) lines.push(`  - URL: ${reminder.url}`);
   return lines;
 };
@@ -70,6 +73,7 @@ export const handleCreateReminder = async (
       list: validatedArgs.targetList,
       dueDate: validatedArgs.dueDate,
       priority: validatedArgs.priority,
+      isCompleted: validatedArgs.completed,
     });
     return formatSuccessMessage(
       'created',

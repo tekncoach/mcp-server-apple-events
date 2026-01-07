@@ -8,7 +8,7 @@ struct ErrorOutput: Codable { let status = "error"; let message: String }
 struct ReadResult: Codable { let lists: [ListJSON]; let reminders: [ReminderJSON] }
 struct DeleteResult: Codable { let id: String; let deleted = true }
 struct DeleteListResult: Codable { let title: String; let deleted = true }
-struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int? }
+struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int?, completionDate: String? }
 struct ListJSON: Codable { let id: String, title: String }
 struct EventJSON: Codable { let id: String, title: String, calendar: String, startDate: String, endDate: String, notes: String?, location: String?, url: String?, isAllDay: Bool }
 struct CalendarJSON: Codable { let id: String, title: String }
@@ -232,12 +232,12 @@ class RemindersManager {
         return filtered.map { $0.toJSON() }
     }
 
-    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?) throws -> ReminderJSON {
+    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?, isCompleted: Bool?) throws -> ReminderJSON {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = try findList(named: listName)
         reminder.title = title
         if let priority = priority { reminder.priority = priority }
-        
+
         // Handle URL: store in both URL field and append to notes
         var finalNotes = notes
         if let urlStr = urlString, !urlStr.isEmpty, let url = URL(string: urlStr) {
@@ -253,7 +253,7 @@ class RemindersManager {
             }
         }
         if let finalNotes = finalNotes { reminder.notes = finalNotes }
-        
+
         if let dateStr = dueDateString {
             if let parsedComponents = parseDateComponents(from: dateStr) {
                 reminder.dueDateComponents = parsedComponents
@@ -263,6 +263,7 @@ class RemindersManager {
                 reminder.timeZone = nil
             }
         }
+        if let completed = isCompleted { reminder.isCompleted = completed }
         try eventStore.save(reminder, commit: true)
         return reminder.toJSON()
     }
@@ -517,8 +518,20 @@ private func formatDueDateWithTimezone(from dateComponents: DateComponents?, tim
 
 // MARK: - Extensions & Main
 extension EKReminder {
+    // Static formatter for performance (avoid creating formatter on each toJSON call)
+    private struct Static {
+        static let completionDateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
+            formatter.timeZone = TimeZone.current
+            return formatter
+        }()
+    }
+
     func toJSON() -> ReminderJSON {
-        ReminderJSON(
+        let completionDateStr = self.completionDate.map { Static.completionDateFormatter.string(from: $0) }
+        return ReminderJSON(
             id: self.calendarItemIdentifier,
             title: self.title,
             isCompleted: self.isCompleted,
@@ -526,7 +539,8 @@ extension EKReminder {
             notes: self.notes,
             url: self.url?.absoluteString,
             dueDate: formatDueDateWithTimezone(from: self.dueDateComponents, timeZoneHint: self.timeZone),
-            priority: self.priority > 0 ? self.priority : nil
+            priority: self.priority > 0 ? self.priority : nil,
+            completionDate: completionDateStr
         )
     }
 }
@@ -641,7 +655,8 @@ func main() {
             case "create":
                 guard let title = parser.get("title") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--title required."]) }
                 let priority = parser.get("priority").flatMap { Int($0) }
-                let reminder = try manager.createReminder(title: title, listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), dueDateString: parser.get("dueDate"), priority: priority)
+                let isCompleted = parser.get("isCompleted").map { $0 == "true" }
+                let reminder = try manager.createReminder(title: title, listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), dueDateString: parser.get("dueDate"), priority: priority, isCompleted: isCompleted)
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "update":
                 guard let id = parser.get("id") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--id required."]) }

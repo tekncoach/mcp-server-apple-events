@@ -16,6 +16,7 @@ export interface ReminderJSON {
   url: string | null;
   dueDate: string | null;
   priority: number | null;
+  completionDate: string | null;
 }
 
 export interface ListJSON {
@@ -65,6 +66,7 @@ export interface CreateReminderData {
   url?: string;
   dueDate?: string;
   priority?: number;
+  isCompleted?: boolean;
 }
 
 export interface UpdateReminderData {

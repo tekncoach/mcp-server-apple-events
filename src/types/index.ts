@@ -15,6 +15,7 @@ export interface Reminder {
   list: string;
   isCompleted: boolean;
   priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
+  completionDate?: string; // Date when reminder was completed (read-only)
 }
 
 /**

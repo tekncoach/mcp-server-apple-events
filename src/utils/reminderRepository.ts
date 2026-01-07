@@ -28,6 +28,7 @@ class ReminderRepository {
       'url',
       'dueDate',
       'priority',
+      'completionDate',
     ]) as Reminder;
 
     // Pass dueDate as-is from Swift CLI to avoid double timezone conversion
@@ -41,6 +42,13 @@ class ReminderRepository {
     // nullToUndefined already handled null → undefined
     if (normalizedReminder.priority === 0) {
       delete normalizedReminder.priority;
+    }
+
+    // Pass completionDate as-is from Swift CLI
+    if (reminder.completionDate) {
+      normalizedReminder.completionDate = reminder.completionDate;
+    } else {
+      delete normalizedReminder.completionDate;
     }
 
     return normalizedReminder;
@@ -86,6 +94,7 @@ class ReminderRepository {
     addOptionalArg(args, '--url', data.url);
     addOptionalArg(args, '--dueDate', data.dueDate);
     addOptionalNumberArg(args, '--priority', data.priority);
+    addOptionalBooleanArg(args, '--isCompleted', data.isCompleted);
 
     return executeCli<ReminderJSON>(args);
   }
