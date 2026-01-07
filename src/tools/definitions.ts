@@ -86,7 +86,7 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
         geofenceTitle: {
           type: 'string',
           description:
-            'Title/name of the geofence location (e.g., "Home", "Office"). Required if setting a geofence.',
+            'Title/name of the geofence location (e.g., "Home", "Office"). Required if setting a geofence. Pass empty string "" to remove an existing geofence.',
         },
         geofenceLatitude: {
           type: 'number',

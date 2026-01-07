@@ -117,10 +117,18 @@ export const SafeUrlSchema = z
   .optional();
 
 // Geofence validation schemas
-export const SafeGeofenceTitleSchema = createOptionalSafeTextSchema(
-  VALIDATION.MAX_TITLE_LENGTH,
-  'Geofence title',
-);
+// SafeGeofenceTitleSchema allows empty string for removal signal
+export const SafeGeofenceTitleSchema = z
+  .string()
+  .max(
+    VALIDATION.MAX_TITLE_LENGTH,
+    `Geofence title cannot exceed ${VALIDATION.MAX_TITLE_LENGTH} characters`,
+  )
+  .refine(
+    (val) => val === '' || SAFE_TEXT_PATTERN.test(val),
+    'Geofence title contains invalid characters',
+  )
+  .optional();
 export const SafeLatitudeSchema = z
   .number()
   .min(-90, 'Latitude must be between -90 and 90')

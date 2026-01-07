@@ -474,6 +474,33 @@ describe('Tool Handlers', () => {
         }),
       );
     });
+
+    it('should pass empty geofenceTitle for geofence removal', async () => {
+      const updatedReminder = {
+        id: 'geo-remove',
+        title: 'Reminder without geofence',
+        isCompleted: false,
+        list: 'Work',
+        notes: null,
+        dueDate: null,
+        url: null,
+        geofence: null, // Geofence was removed
+      };
+      mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
+
+      await handleUpdateReminder({
+        action: 'update',
+        id: 'geo-remove',
+        geofenceTitle: '', // Empty string signals removal
+      });
+
+      expect(mockReminderRepository.updateReminder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'geo-remove',
+          geofenceTitle: '',
+        }),
+      );
+    });
   });
 
   describe('handleDeleteReminder', () => {

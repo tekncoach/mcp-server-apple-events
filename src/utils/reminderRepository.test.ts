@@ -676,6 +676,25 @@ describe('ReminderRepository', () => {
       expect(args).toContain('enter');
       expect(args).not.toContain('--geofenceRadius');
     });
+
+    it('should pass empty geofenceTitle for geofence removal', async () => {
+      const data = {
+        id: 'geo-remove',
+        geofenceTitle: '',
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'geo-remove' });
+
+      await repository.updateReminder(data);
+
+      const args = mockExecuteCli.mock.calls[0][0];
+      expect(args).toContain('--geofenceTitle');
+      expect(args).toContain('');
+      expect(args).not.toContain('--geofenceLatitude');
+      expect(args).not.toContain('--geofenceLongitude');
+      expect(args).not.toContain('--geofenceRadius');
+      expect(args).not.toContain('--geofenceProximity');
+    });
   });
 
   describe('deleteReminder', () => {
