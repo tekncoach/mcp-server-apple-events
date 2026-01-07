@@ -146,6 +146,90 @@ describe('Tool Handlers', () => {
       expect(content).toContain('### Reminders (Total: 0)');
       expect(content).toContain('No reminders found matching the criteria.');
     });
+
+    it('formats reminder with geofence enter proximity', async () => {
+      const mockReminder = {
+        id: 'geo-1',
+        title: 'Location Reminder',
+        isCompleted: false,
+        list: 'Personal',
+        geofence: {
+          title: 'Office',
+          latitude: 48.8566,
+          longitude: 2.3522,
+          radius: 200,
+          proximity: 'enter' as const,
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({ action: 'read', id: 'geo-1' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- [ ] Location Reminder');
+      expect(content).toContain(
+        '- Location: When arriving at "Office" (48.8566, 2.3522, 200m)',
+      );
+    });
+
+    it('formats reminder with geofence leave proximity', async () => {
+      const mockReminder = {
+        id: 'geo-2',
+        title: 'Leave Reminder',
+        isCompleted: false,
+        list: 'Work',
+        geofence: {
+          title: 'Home',
+          latitude: 37.7749,
+          longitude: -122.4194,
+          radius: 100,
+          proximity: 'leave' as const,
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({ action: 'read', id: 'geo-2' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain(
+        '- Location: When leaving "Home" (37.7749, -122.4194, 100m)',
+      );
+    });
+
+    it('formats reminder list with mixed geofence reminders', async () => {
+      const mockReminders = [
+        {
+          id: '1',
+          title: 'No Location',
+          isCompleted: false,
+          list: 'Personal',
+        },
+        {
+          id: '2',
+          title: 'With Location',
+          isCompleted: false,
+          list: 'Work',
+          geofence: {
+            title: 'Gym',
+            latitude: 40.7128,
+            longitude: -74.006,
+            radius: 150,
+            proximity: 'enter' as const,
+          },
+        },
+      ];
+      mockReminderRepository.findReminders.mockResolvedValue(mockReminders);
+
+      const result = await handleReadReminders({ action: 'read' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- [ ] No Location');
+      expect(content).not.toContain('No Location\n  - Location:');
+      expect(content).toContain('- [ ] With Location');
+      expect(content).toContain(
+        '- Location: When arriving at "Gym" (40.7128, -74.0060, 150m)',
+      );
+    });
   });
 
   describe('handleCreateReminder', () => {
@@ -168,6 +252,88 @@ describe('Tool Handlers', () => {
       const content = _getTextContent(result.content);
       expect(content).toContain('Successfully created reminder "New Task"');
       expect(content).toContain('- ID: rem-123');
+    });
+
+    it('should pass geofence params to repository', async () => {
+      const newReminder = {
+        id: 'geo-rem-123',
+        title: 'Location Task',
+        isCompleted: false,
+        list: 'Inbox',
+        notes: null,
+        url: null,
+        dueDate: null,
+        geofence: {
+          title: 'Office',
+          latitude: 48.8566,
+          longitude: 2.3522,
+          radius: 200,
+          proximity: 'enter',
+        },
+      };
+      mockReminderRepository.createReminder.mockResolvedValue(newReminder);
+
+      await handleCreateReminder({
+        action: 'create',
+        title: 'Location Task',
+        geofenceTitle: 'Office',
+        geofenceLatitude: 48.8566,
+        geofenceLongitude: 2.3522,
+        geofenceRadius: 200,
+        geofenceProximity: 'enter',
+      });
+
+      expect(mockReminderRepository.createReminder).toHaveBeenCalledWith({
+        title: 'Location Task',
+        notes: undefined,
+        url: undefined,
+        list: undefined,
+        dueDate: undefined,
+        geofenceTitle: 'Office',
+        geofenceLatitude: 48.8566,
+        geofenceLongitude: 2.3522,
+        geofenceRadius: 200,
+        geofenceProximity: 'enter',
+      });
+    });
+
+    it('should create reminder with geofence using default radius', async () => {
+      const newReminder = {
+        id: 'geo-rem-456',
+        title: 'Default Radius Task',
+        isCompleted: false,
+        list: 'Inbox',
+        notes: null,
+        url: null,
+        dueDate: null,
+        geofence: {
+          title: 'Home',
+          latitude: 37.7749,
+          longitude: -122.4194,
+          radius: 100,
+          proximity: 'leave',
+        },
+      };
+      mockReminderRepository.createReminder.mockResolvedValue(newReminder);
+
+      await handleCreateReminder({
+        action: 'create',
+        title: 'Default Radius Task',
+        geofenceTitle: 'Home',
+        geofenceLatitude: 37.7749,
+        geofenceLongitude: -122.4194,
+        geofenceProximity: 'leave',
+      });
+
+      expect(mockReminderRepository.createReminder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          geofenceTitle: 'Home',
+          geofenceLatitude: 37.7749,
+          geofenceLongitude: -122.4194,
+          geofenceProximity: 'leave',
+          geofenceRadius: undefined,
+        }),
+      );
     });
   });
 
@@ -192,6 +358,121 @@ describe('Tool Handlers', () => {
       const content = _getTextContent(result.content);
       expect(content).toContain('Successfully updated reminder "Updated Task"');
       expect(content).toContain('- ID: rem-456');
+    });
+
+    it('should pass all geofence params to repository for full update', async () => {
+      const updatedReminder = {
+        id: 'geo-456',
+        title: 'Geo Task',
+        isCompleted: false,
+        list: 'Inbox',
+        notes: null,
+        url: null,
+        dueDate: null,
+        geofence: {
+          title: 'New Office',
+          latitude: 40.7128,
+          longitude: -74.006,
+          radius: 300,
+          proximity: 'leave',
+        },
+      };
+      mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
+
+      await handleUpdateReminder({
+        action: 'update',
+        id: 'geo-456',
+        geofenceTitle: 'New Office',
+        geofenceLatitude: 40.7128,
+        geofenceLongitude: -74.006,
+        geofenceRadius: 300,
+        geofenceProximity: 'leave',
+      });
+
+      expect(mockReminderRepository.updateReminder).toHaveBeenCalledWith({
+        id: 'geo-456',
+        newTitle: undefined,
+        notes: undefined,
+        url: undefined,
+        isCompleted: undefined,
+        list: undefined,
+        dueDate: undefined,
+        geofenceTitle: 'New Office',
+        geofenceLatitude: 40.7128,
+        geofenceLongitude: -74.006,
+        geofenceRadius: 300,
+        geofenceProximity: 'leave',
+      });
+    });
+
+    it('should pass partial geofence params for radius-only update', async () => {
+      const updatedReminder = {
+        id: 'geo-789',
+        title: 'Partial Update Task',
+        isCompleted: false,
+        list: 'Work',
+        notes: null,
+        url: null,
+        dueDate: null,
+        geofence: {
+          title: 'Office',
+          latitude: 48.8566,
+          longitude: 2.3522,
+          radius: 500,
+          proximity: 'enter',
+        },
+      };
+      mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
+
+      await handleUpdateReminder({
+        action: 'update',
+        id: 'geo-789',
+        geofenceRadius: 500,
+      });
+
+      expect(mockReminderRepository.updateReminder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'geo-789',
+          geofenceRadius: 500,
+          geofenceTitle: undefined,
+          geofenceLatitude: undefined,
+          geofenceLongitude: undefined,
+          geofenceProximity: undefined,
+        }),
+      );
+    });
+
+    it('should pass partial geofence params for proximity-only update', async () => {
+      const updatedReminder = {
+        id: 'geo-101',
+        title: 'Proximity Update Task',
+        isCompleted: false,
+        list: 'Personal',
+        notes: null,
+        url: null,
+        dueDate: null,
+        geofence: {
+          title: 'Home',
+          latitude: 37.7749,
+          longitude: -122.4194,
+          radius: 100,
+          proximity: 'leave',
+        },
+      };
+      mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
+
+      await handleUpdateReminder({
+        action: 'update',
+        id: 'geo-101',
+        geofenceProximity: 'leave',
+      });
+
+      expect(mockReminderRepository.updateReminder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'geo-101',
+          geofenceProximity: 'leave',
+        }),
+      );
     });
   });
 

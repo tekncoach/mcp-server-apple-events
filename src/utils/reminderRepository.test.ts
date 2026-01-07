@@ -247,6 +247,96 @@ describe('ReminderRepository', () => {
 
       expect(result[0].dueDate).toBe('2025-11-20T02:00:00Z');
     });
+
+    it('should map geofence data with enter proximity', async () => {
+      const mockReminders = [
+        {
+          id: 'geo-1',
+          title: 'Location Reminder',
+          isCompleted: false,
+          list: 'Personal',
+          geofence: {
+            title: 'Office',
+            latitude: 48.8566,
+            longitude: 2.3522,
+            radius: 200,
+            proximity: 'enter',
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].geofence).toEqual({
+        title: 'Office',
+        latitude: 48.8566,
+        longitude: 2.3522,
+        radius: 200,
+        proximity: 'enter',
+      });
+    });
+
+    it('should map geofence data with leave proximity', async () => {
+      const mockReminders = [
+        {
+          id: 'geo-2',
+          title: 'Leave Reminder',
+          isCompleted: false,
+          list: 'Work',
+          geofence: {
+            title: 'Home',
+            latitude: 37.7749,
+            longitude: -122.4194,
+            radius: 100,
+            proximity: 'leave',
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].geofence).toEqual({
+        title: 'Home',
+        latitude: 37.7749,
+        longitude: -122.4194,
+        radius: 100,
+        proximity: 'leave',
+      });
+    });
+
+    it('should handle reminder without geofence', async () => {
+      const mockReminders = [
+        {
+          id: 'no-geo',
+          title: 'Normal Reminder',
+          isCompleted: false,
+          list: 'Default',
+          geofence: null,
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].geofence).toBeUndefined();
+    });
   });
 
   describe('findAllLists', () => {
@@ -361,6 +451,71 @@ describe('ReminderRepository', () => {
       expect(args).not.toContain('--url');
       expect(args).not.toContain('--dueDate');
     });
+
+    it('should create reminder with all geofence fields', async () => {
+      const data = {
+        title: 'Location Reminder',
+        geofenceTitle: 'Office',
+        geofenceLatitude: 48.8566,
+        geofenceLongitude: 2.3522,
+        geofenceRadius: 200,
+        geofenceProximity: 'enter' as const,
+      };
+      const mockResult: Reminder = {
+        id: '456',
+        title: 'Location Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Location Reminder',
+        '--geofenceTitle',
+        'Office',
+        '--geofenceLatitude',
+        '48.8566',
+        '--geofenceLongitude',
+        '2.3522',
+        '--geofenceRadius',
+        '200',
+        '--geofenceProximity',
+        'enter',
+      ]);
+    });
+
+    it('should create reminder with geofence without radius (default)', async () => {
+      const data = {
+        title: 'Default Radius Reminder',
+        geofenceTitle: 'Home',
+        geofenceLatitude: 37.7749,
+        geofenceLongitude: -122.4194,
+        geofenceProximity: 'leave' as const,
+      };
+      const mockResult: Reminder = {
+        id: '789',
+        title: 'Default Radius Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      const args = mockExecuteCli.mock.calls[0][0];
+      expect(args).toContain('--geofenceTitle');
+      expect(args).toContain('Home');
+      expect(args).toContain('--geofenceProximity');
+      expect(args).toContain('leave');
+      expect(args).not.toContain('--geofenceRadius');
+    });
   });
 
   describe('updateReminder', () => {
@@ -453,6 +608,73 @@ describe('ReminderRepository', () => {
 
       const args = mockExecuteCli.mock.calls[0][0];
       expect(args).not.toContain('--isCompleted');
+    });
+
+    it('should update reminder with all geofence fields', async () => {
+      const data = {
+        id: 'geo-123',
+        geofenceTitle: 'New Office',
+        geofenceLatitude: 40.7128,
+        geofenceLongitude: -74.006,
+        geofenceRadius: 300,
+        geofenceProximity: 'leave' as const,
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'geo-123' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'geo-123',
+        '--geofenceTitle',
+        'New Office',
+        '--geofenceLatitude',
+        '40.7128',
+        '--geofenceLongitude',
+        '-74.006',
+        '--geofenceRadius',
+        '300',
+        '--geofenceProximity',
+        'leave',
+      ]);
+    });
+
+    it('should update reminder with partial geofence (radius only)', async () => {
+      const data = {
+        id: 'geo-456',
+        geofenceRadius: 500,
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'geo-456' });
+
+      await repository.updateReminder(data);
+
+      const args = mockExecuteCli.mock.calls[0][0];
+      expect(args).toContain('--geofenceRadius');
+      expect(args).toContain('500');
+      expect(args).not.toContain('--geofenceTitle');
+      expect(args).not.toContain('--geofenceLatitude');
+      expect(args).not.toContain('--geofenceLongitude');
+      expect(args).not.toContain('--geofenceProximity');
+    });
+
+    it('should update reminder with partial geofence (proximity only)', async () => {
+      const data = {
+        id: 'geo-789',
+        geofenceProximity: 'enter' as const,
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'geo-789' });
+
+      await repository.updateReminder(data);
+
+      const args = mockExecuteCli.mock.calls[0][0];
+      expect(args).toContain('--geofenceProximity');
+      expect(args).toContain('enter');
+      expect(args).not.toContain('--geofenceRadius');
     });
   });
 
