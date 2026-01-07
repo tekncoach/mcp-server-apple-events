@@ -240,6 +240,7 @@ describe('ValidationSchemas', () => {
           expect(() => SafeRadiusSchema.parse(100)).not.toThrow();
           expect(() => SafeRadiusSchema.parse(1000)).not.toThrow();
           expect(() => SafeRadiusSchema.parse(100000)).not.toThrow();
+          expect(() => SafeRadiusSchema.parse(2400000)).not.toThrow();
         });
 
         it('should reject radius values out of range', () => {
@@ -247,7 +248,7 @@ describe('ValidationSchemas', () => {
           expect(() => SafeRadiusSchema.parse(1)).toThrow();
           expect(() => SafeRadiusSchema.parse(99)).toThrow();
           expect(() => SafeRadiusSchema.parse(-1)).toThrow();
-          expect(() => SafeRadiusSchema.parse(100001)).toThrow();
+          expect(() => SafeRadiusSchema.parse(2400001)).toThrow();
         });
       });
 

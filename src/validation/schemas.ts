@@ -134,7 +134,7 @@ export const SafeLongitudeSchema = z
 export const SafeRadiusSchema = z
   .number()
   .min(100, 'Radius must be at least 100 meters')
-  .max(100000, 'Radius cannot exceed 100km')
+  .max(2400000, 'Radius cannot exceed 2400km')
   .optional();
 export const SafeProximitySchema = z.enum(['enter', 'leave']).optional();
 
