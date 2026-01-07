@@ -163,6 +163,7 @@ describe('ValidationSchemas', () => {
             note: 'Test note',
             url: 'https://example.com',
             targetList: 'Work',
+            completed: true, // Bug fix: completed is now supported on create
           },
           minimalInput: { title: 'Test reminder' },
           requiredFields: ['title'],
