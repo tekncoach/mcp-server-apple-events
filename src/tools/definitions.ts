@@ -99,7 +99,7 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
         geofenceRadius: {
           type: 'number',
           description:
-            'Radius of the geofence in meters (default: 100). Must be between 100 and 100000.',
+            'Radius of the geofence in meters (default: 100). Must be between 100 and 2400000 (2400km).',
         },
         geofenceProximity: {
           type: 'string',
