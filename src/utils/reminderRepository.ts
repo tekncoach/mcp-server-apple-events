@@ -63,10 +63,12 @@ class ReminderRepository {
       delete normalizedReminder.completionDate;
     }
 
-    // Map geofence if present
+    // Map geofence if present, otherwise remove null value
     const geofence = this.mapGeofence(reminder.geofence);
     if (geofence) {
       normalizedReminder.geofence = geofence;
+    } else {
+      delete normalizedReminder.geofence;
     }
 
     return normalizedReminder;
