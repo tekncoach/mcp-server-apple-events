@@ -37,10 +37,9 @@ class ReminderRepository {
       delete normalizedReminder.dueDate;
     }
 
-    // Pass priority as-is, omit if null/undefined/0
-    if (reminder.priority && reminder.priority > 0) {
-      normalizedReminder.priority = reminder.priority;
-    } else {
+    // Omit priority if 0 (means 'no priority')
+    // nullToUndefined already handled null → undefined
+    if (normalizedReminder.priority === 0) {
       delete normalizedReminder.priority;
     }
 
