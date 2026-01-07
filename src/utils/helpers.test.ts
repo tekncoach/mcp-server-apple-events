@@ -3,9 +3,74 @@
  * Tests for helper utility functions
  */
 
-import { nullToUndefined } from './helpers.js';
+import {
+  addOptionalArg,
+  addOptionalBooleanArg,
+  addOptionalNumberArg,
+  nullToUndefined,
+} from './helpers.js';
 
 describe('helpers', () => {
+  describe('addOptionalArg', () => {
+    it('should add string argument when value is defined', () => {
+      const args: string[] = [];
+      addOptionalArg(args, '--title', 'Test');
+      expect(args).toEqual(['--title', 'Test']);
+    });
+
+    it('should not add argument when value is undefined', () => {
+      const args: string[] = [];
+      addOptionalArg(args, '--title', undefined);
+      expect(args).toEqual([]);
+    });
+
+    it('should not add argument when value is empty string', () => {
+      const args: string[] = [];
+      addOptionalArg(args, '--title', '');
+      expect(args).toEqual([]);
+    });
+  });
+
+  describe('addOptionalBooleanArg', () => {
+    it('should add boolean true argument', () => {
+      const args: string[] = [];
+      addOptionalBooleanArg(args, '--completed', true);
+      expect(args).toEqual(['--completed', 'true']);
+    });
+
+    it('should add boolean false argument', () => {
+      const args: string[] = [];
+      addOptionalBooleanArg(args, '--completed', false);
+      expect(args).toEqual(['--completed', 'false']);
+    });
+
+    it('should not add argument when value is undefined', () => {
+      const args: string[] = [];
+      addOptionalBooleanArg(args, '--completed', undefined);
+      expect(args).toEqual([]);
+    });
+  });
+
+  describe('addOptionalNumberArg', () => {
+    it('should add number argument when value is defined', () => {
+      const args: string[] = [];
+      addOptionalNumberArg(args, '--priority', 5);
+      expect(args).toEqual(['--priority', '5']);
+    });
+
+    it('should add zero as argument', () => {
+      const args: string[] = [];
+      addOptionalNumberArg(args, '--priority', 0);
+      expect(args).toEqual(['--priority', '0']);
+    });
+
+    it('should not add argument when value is undefined', () => {
+      const args: string[] = [];
+      addOptionalNumberArg(args, '--priority', undefined);
+      expect(args).toEqual([]);
+    });
+  });
+
   describe('nullToUndefined', () => {
     it('should convert null values to undefined for specified fields', () => {
       const obj = {

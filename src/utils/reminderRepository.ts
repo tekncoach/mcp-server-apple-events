@@ -17,6 +17,7 @@ import { applyReminderFilters } from './dateFiltering.js';
 import {
   addOptionalArg,
   addOptionalBooleanArg,
+  addOptionalNumberArg,
   nullToUndefined,
 } from './helpers.js';
 
@@ -26,6 +27,7 @@ class ReminderRepository {
       'notes',
       'url',
       'dueDate',
+      'priority',
     ]) as Reminder;
 
     // Pass dueDate as-is from Swift CLI to avoid double timezone conversion
@@ -33,6 +35,13 @@ class ReminderRepository {
       normalizedReminder.dueDate = reminder.dueDate;
     } else {
       delete normalizedReminder.dueDate;
+    }
+
+    // Pass priority as-is, omit if null/undefined/0
+    if (reminder.priority && reminder.priority > 0) {
+      normalizedReminder.priority = reminder.priority;
+    } else {
+      delete normalizedReminder.priority;
     }
 
     return normalizedReminder;
@@ -77,6 +86,7 @@ class ReminderRepository {
     addOptionalArg(args, '--note', data.notes);
     addOptionalArg(args, '--url', data.url);
     addOptionalArg(args, '--dueDate', data.dueDate);
+    addOptionalNumberArg(args, '--priority', data.priority);
 
     return executeCli<ReminderJSON>(args);
   }
@@ -89,6 +99,7 @@ class ReminderRepository {
     addOptionalArg(args, '--url', data.url);
     addOptionalArg(args, '--dueDate', data.dueDate);
     addOptionalBooleanArg(args, '--isCompleted', data.isCompleted);
+    addOptionalNumberArg(args, '--priority', data.priority);
 
     return executeCli<ReminderJSON>(args);
   }

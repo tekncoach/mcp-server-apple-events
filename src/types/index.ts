@@ -14,6 +14,7 @@ export interface Reminder {
   url?: string; // Native URL field (currently limited by EventKit API)
   list: string;
   isCompleted: boolean;
+  priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
 }
 
 /**
@@ -127,6 +128,7 @@ export interface RemindersToolArgs extends BaseToolArgs {
   note?: string;
   url?: string;
   completed?: boolean;
+  priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
   // Target list for create/update operations
   targetList?: string;
 }

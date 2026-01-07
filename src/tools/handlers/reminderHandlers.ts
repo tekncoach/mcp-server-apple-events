@@ -24,6 +24,16 @@ import {
 /**
  * Formats a reminder object as markdown list items
  */
+/**
+ * Formats priority as human-readable text
+ */
+const formatPriority = (priority: number): string => {
+  if (priority >= 1 && priority <= 4) return 'High';
+  if (priority === 5) return 'Medium';
+  if (priority >= 6 && priority <= 9) return 'Low';
+  return 'None';
+};
+
 const formatReminderMarkdown = (reminder: {
   title: string;
   isCompleted: boolean;
@@ -32,12 +42,15 @@ const formatReminderMarkdown = (reminder: {
   notes?: string;
   dueDate?: string;
   url?: string;
+  priority?: number;
 }): string[] => {
   const lines: string[] = [];
   const checkbox = reminder.isCompleted ? '[x]' : '[ ]';
   lines.push(`- ${checkbox} ${reminder.title}`);
   if (reminder.list) lines.push(`  - List: ${reminder.list}`);
   if (reminder.id) lines.push(`  - ID: ${reminder.id}`);
+  if (reminder.priority && reminder.priority > 0)
+    lines.push(`  - Priority: ${formatPriority(reminder.priority)}`);
   if (reminder.notes)
     lines.push(`  - Notes: ${formatMultilineNotes(reminder.notes)}`);
   if (reminder.dueDate) lines.push(`  - Due: ${reminder.dueDate}`);
@@ -56,6 +69,7 @@ export const handleCreateReminder = async (
       url: validatedArgs.url,
       list: validatedArgs.targetList,
       dueDate: validatedArgs.dueDate,
+      priority: validatedArgs.priority,
     });
     return formatSuccessMessage(
       'created',
@@ -79,6 +93,7 @@ export const handleUpdateReminder = async (
       isCompleted: validatedArgs.completed,
       list: validatedArgs.targetList,
       dueDate: validatedArgs.dueDate,
+      priority: validatedArgs.priority,
     });
     return formatSuccessMessage(
       'updated',

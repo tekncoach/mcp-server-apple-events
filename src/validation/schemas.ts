@@ -122,6 +122,16 @@ const DueWithinEnum = z
   .optional();
 
 /**
+ * Priority schema for reminders (0 = none, 1-4 = high, 5 = medium, 6-9 = low)
+ */
+export const SafePrioritySchema = z
+  .number()
+  .int('Priority must be an integer')
+  .min(0, 'Priority must be at least 0')
+  .max(9, 'Priority cannot exceed 9')
+  .optional();
+
+/**
  * Common field combinations for reusability
  */
 const BaseReminderFields = {
@@ -130,6 +140,7 @@ const BaseReminderFields = {
   note: SafeNoteSchema,
   url: SafeUrlSchema,
   targetList: SafeListNameSchema,
+  priority: SafePrioritySchema,
 };
 
 export const SafeIdSchema = z.string().min(1, 'ID cannot be empty');
@@ -155,6 +166,7 @@ export const UpdateReminderSchema = z.object({
   url: SafeUrlSchema,
   completed: z.boolean().optional(),
   targetList: SafeListNameSchema,
+  priority: SafePrioritySchema,
 });
 
 export const DeleteReminderSchema = z.object({

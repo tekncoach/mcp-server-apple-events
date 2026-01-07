@@ -158,6 +158,7 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
       };
       mockReminderRepository.createReminder.mockResolvedValue(newReminder);
       const result = await handleCreateReminder({
@@ -180,6 +181,7 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
       const result = await handleUpdateReminder({

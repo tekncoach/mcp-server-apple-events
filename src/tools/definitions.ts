@@ -78,6 +78,11 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           type: 'boolean',
           description: 'The completion status of the reminder (for update).',
         },
+        priority: {
+          type: 'number',
+          description:
+            'Priority level (0 = none, 1-4 = high, 5 = medium, 6-9 = low).',
+        },
         targetList: {
           type: 'string',
           description: 'The name of the list for create or update operations.',

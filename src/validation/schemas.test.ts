@@ -12,6 +12,7 @@ import {
   RequiredListNameSchema,
   SafeDateSchema,
   SafeNoteSchema,
+  SafePrioritySchema,
   SafeTextSchema,
   SafeUrlSchema,
   UpdateReminderListSchema,
@@ -147,6 +148,32 @@ describe('ValidationSchemas', () => {
       it('should reject invalid URL formats', () => {
         expect(() => SafeUrlSchema.parse('not-a-url')).toThrow();
         expect(() => SafeUrlSchema.parse('ftp://example.com')).toThrow();
+      });
+    });
+
+    describe('SafePrioritySchema', () => {
+      it('should validate valid priority values (0-9)', () => {
+        expect(() => SafePrioritySchema.parse(0)).not.toThrow();
+        expect(() => SafePrioritySchema.parse(1)).not.toThrow();
+        expect(() => SafePrioritySchema.parse(5)).not.toThrow();
+        expect(() => SafePrioritySchema.parse(9)).not.toThrow();
+      });
+
+      it('should accept undefined priority', () => {
+        expect(() => SafePrioritySchema.parse(undefined)).not.toThrow();
+      });
+
+      it('should reject priority values below 0', () => {
+        expect(() => SafePrioritySchema.parse(-1)).toThrow();
+      });
+
+      it('should reject priority values above 9', () => {
+        expect(() => SafePrioritySchema.parse(10)).toThrow();
+      });
+
+      it('should reject non-integer priority values', () => {
+        expect(() => SafePrioritySchema.parse(1.5)).toThrow();
+        expect(() => SafePrioritySchema.parse(5.5)).toThrow();
       });
     });
   });
