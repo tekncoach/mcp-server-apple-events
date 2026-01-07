@@ -116,6 +116,28 @@ export const SafeUrlSchema = z
   )
   .optional();
 
+// Geofence validation schemas
+export const SafeGeofenceTitleSchema = createOptionalSafeTextSchema(
+  VALIDATION.MAX_TITLE_LENGTH,
+  'Geofence title',
+);
+export const SafeLatitudeSchema = z
+  .number()
+  .min(-90, 'Latitude must be between -90 and 90')
+  .max(90, 'Latitude must be between -90 and 90')
+  .optional();
+export const SafeLongitudeSchema = z
+  .number()
+  .min(-180, 'Longitude must be between -180 and 180')
+  .max(180, 'Longitude must be between -180 and 180')
+  .optional();
+export const SafeRadiusSchema = z
+  .number()
+  .min(100, 'Radius must be at least 100 meters')
+  .max(100000, 'Radius cannot exceed 100km')
+  .optional();
+export const SafeProximitySchema = z.enum(['enter', 'leave']).optional();
+
 // Reusable schemas for common fields
 const DueWithinEnum = z
   .enum(['today', 'tomorrow', 'this-week', 'overdue', 'no-date'])
@@ -124,12 +146,21 @@ const DueWithinEnum = z
 /**
  * Common field combinations for reusability
  */
+const GeofenceFields = {
+  geofenceTitle: SafeGeofenceTitleSchema,
+  geofenceLatitude: SafeLatitudeSchema,
+  geofenceLongitude: SafeLongitudeSchema,
+  geofenceRadius: SafeRadiusSchema,
+  geofenceProximity: SafeProximitySchema,
+};
+
 const BaseReminderFields = {
   title: SafeTextSchema,
   dueDate: SafeDateSchema,
   note: SafeNoteSchema,
   url: SafeUrlSchema,
   targetList: SafeListNameSchema,
+  ...GeofenceFields,
 };
 
 export const SafeIdSchema = z.string().min(1, 'ID cannot be empty');
@@ -155,6 +186,7 @@ export const UpdateReminderSchema = z.object({
   url: SafeUrlSchema,
   completed: z.boolean().optional(),
   targetList: SafeListNameSchema,
+  ...GeofenceFields,
 });
 
 export const DeleteReminderSchema = z.object({

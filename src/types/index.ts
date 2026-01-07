@@ -4,6 +4,17 @@
  */
 
 /**
+ * Geofence for location-based reminders
+ */
+export interface Geofence {
+  title: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  proximity: 'enter' | 'leave';
+}
+
+/**
  * Reminder item interface
  */
 export interface Reminder {
@@ -14,6 +25,7 @@ export interface Reminder {
   url?: string; // Native URL field (currently limited by EventKit API)
   list: string;
   isCompleted: boolean;
+  geofence?: Geofence;
 }
 
 /**
@@ -129,6 +141,12 @@ export interface RemindersToolArgs extends BaseToolArgs {
   completed?: boolean;
   // Target list for create/update operations
   targetList?: string;
+  // Geofence parameters for location-based reminders
+  geofenceTitle?: string;
+  geofenceLatitude?: number;
+  geofenceLongitude?: number;
+  geofenceRadius?: number;
+  geofenceProximity?: 'enter' | 'leave';
 }
 
 export interface ListsToolArgs extends BaseToolArgs {

@@ -82,6 +82,31 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           type: 'string',
           description: 'The name of the list for create or update operations.',
         },
+        // Geofence properties for location-based reminders
+        geofenceTitle: {
+          type: 'string',
+          description:
+            'Title/name of the geofence location (e.g., "Home", "Office"). Required if setting a geofence.',
+        },
+        geofenceLatitude: {
+          type: 'number',
+          description: 'Latitude of the geofence center (-90 to 90).',
+        },
+        geofenceLongitude: {
+          type: 'number',
+          description: 'Longitude of the geofence center (-180 to 180).',
+        },
+        geofenceRadius: {
+          type: 'number',
+          description:
+            'Radius of the geofence in meters (default: 100). Must be between 100 and 100000.',
+        },
+        geofenceProximity: {
+          type: 'string',
+          enum: ['enter', 'leave'],
+          description:
+            "When to trigger the reminder: 'enter' when arriving at location, 'leave' when departing.",
+        },
         // Read filters
         filterList: {
           type: 'string',
