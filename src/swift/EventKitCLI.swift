@@ -516,15 +516,19 @@ private func formatDueDateWithTimezone(from dateComponents: DateComponents?, tim
 
 // MARK: - Extensions & Main
 extension EKReminder {
-    func toJSON() -> ReminderJSON {
-        var completionDateStr: String? = nil
-        if let completionDate = self.completionDate {
+    // Static formatter for performance (avoid creating formatter on each toJSON call)
+    private struct Static {
+        static let completionDateFormatter: DateFormatter = {
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZZZZZ"
             formatter.timeZone = TimeZone.current
-            completionDateStr = formatter.string(from: completionDate)
-        }
+            return formatter
+        }()
+    }
+
+    func toJSON() -> ReminderJSON {
+        let completionDateStr = self.completionDate.map { Static.completionDateFormatter.string(from: $0) }
         return ReminderJSON(
             id: self.calendarItemIdentifier,
             title: self.title,
