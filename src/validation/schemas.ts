@@ -137,7 +137,10 @@ export const SafeIdSchema = z.string().min(1, 'ID cannot be empty');
 /**
  * Tool-specific validation schemas
  */
-export const CreateReminderSchema = z.object(BaseReminderFields);
+export const CreateReminderSchema = z.object({
+  ...BaseReminderFields,
+  completed: z.boolean().optional(),
+});
 
 export const ReadRemindersSchema = z.object({
   id: SafeIdSchema.optional(),

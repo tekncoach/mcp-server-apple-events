@@ -56,6 +56,7 @@ export const handleCreateReminder = async (
       url: validatedArgs.url,
       list: validatedArgs.targetList,
       dueDate: validatedArgs.dueDate,
+      isCompleted: validatedArgs.completed,
     });
     return formatSuccessMessage(
       'created',

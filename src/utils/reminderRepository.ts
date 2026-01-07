@@ -77,6 +77,7 @@ class ReminderRepository {
     addOptionalArg(args, '--note', data.notes);
     addOptionalArg(args, '--url', data.url);
     addOptionalArg(args, '--dueDate', data.dueDate);
+    addOptionalBooleanArg(args, '--isCompleted', data.isCompleted);
 
     return executeCli<ReminderJSON>(args);
   }

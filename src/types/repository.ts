@@ -63,6 +63,7 @@ export interface CreateReminderData {
   notes?: string;
   url?: string;
   dueDate?: string;
+  isCompleted?: boolean;
 }
 
 export interface UpdateReminderData {

@@ -232,11 +232,11 @@ class RemindersManager {
         return filtered.map { $0.toJSON() }
     }
 
-    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?) throws -> ReminderJSON {
+    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, isCompleted: Bool?) throws -> ReminderJSON {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = try findList(named: listName)
         reminder.title = title
-        
+
         // Handle URL: store in both URL field and append to notes
         var finalNotes = notes
         if let urlStr = urlString, !urlStr.isEmpty, let url = URL(string: urlStr) {
@@ -252,7 +252,7 @@ class RemindersManager {
             }
         }
         if let finalNotes = finalNotes { reminder.notes = finalNotes }
-        
+
         if let dateStr = dueDateString {
             if let parsedComponents = parseDateComponents(from: dateStr) {
                 reminder.dueDateComponents = parsedComponents
@@ -262,6 +262,7 @@ class RemindersManager {
                 reminder.timeZone = nil
             }
         }
+        if let completed = isCompleted { reminder.isCompleted = completed }
         try eventStore.save(reminder, commit: true)
         return reminder.toJSON()
     }
@@ -637,7 +638,8 @@ func main() {
                 print(String(data: try encoder.encode(StandardOutput(result: manager.getLists())), encoding: .utf8)!)
             case "create":
                 guard let title = parser.get("title") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--title required."]) }
-                let reminder = try manager.createReminder(title: title, listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), dueDateString: parser.get("dueDate"))
+                let isCompleted = parser.get("isCompleted").map { $0 == "true" }
+                let reminder = try manager.createReminder(title: title, listName: parser.get("targetList"), notes: parser.get("note"), urlString: parser.get("url"), dueDateString: parser.get("dueDate"), isCompleted: isCompleted)
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "update":
                 guard let id = parser.get("id") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--id required."]) }

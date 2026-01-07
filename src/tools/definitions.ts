@@ -76,7 +76,7 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
         },
         completed: {
           type: 'boolean',
-          description: 'The completion status of the reminder (for update).',
+          description: 'The completion status of the reminder.',
         },
         targetList: {
           type: 'string',
