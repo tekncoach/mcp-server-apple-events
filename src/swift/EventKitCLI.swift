@@ -8,7 +8,7 @@ struct ErrorOutput: Codable { let status = "error"; let message: String }
 struct ReadResult: Codable { let lists: [ListJSON]; let reminders: [ReminderJSON] }
 struct DeleteResult: Codable { let id: String; let deleted = true }
 struct DeleteListResult: Codable { let title: String; let deleted = true }
-struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String? }
+struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, completionDate: String? }
 struct ListJSON: Codable { let id: String, title: String }
 struct EventJSON: Codable { let id: String, title: String, calendar: String, startDate: String, endDate: String, notes: String?, location: String?, url: String?, isAllDay: Bool }
 struct CalendarJSON: Codable { let id: String, title: String }
@@ -517,14 +517,23 @@ private func formatDueDateWithTimezone(from dateComponents: DateComponents?, tim
 // MARK: - Extensions & Main
 extension EKReminder {
     func toJSON() -> ReminderJSON {
-        ReminderJSON(
+        var completionDateStr: String? = nil
+        if let completionDate = self.completionDate {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            formatter.timeZone = TimeZone.current
+            completionDateStr = formatter.string(from: completionDate)
+        }
+        return ReminderJSON(
             id: self.calendarItemIdentifier,
             title: self.title,
             isCompleted: self.isCompleted,
             list: self.calendar.title,
             notes: self.notes,
             url: self.url?.absoluteString,
-            dueDate: formatDueDateWithTimezone(from: self.dueDateComponents, timeZoneHint: self.timeZone)
+            dueDate: formatDueDateWithTimezone(from: self.dueDateComponents, timeZoneHint: self.timeZone),
+            completionDate: completionDateStr
         )
     }
 }

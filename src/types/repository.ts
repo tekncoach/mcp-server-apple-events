@@ -15,6 +15,7 @@ export interface ReminderJSON {
   notes: string | null;
   url: string | null;
   dueDate: string | null;
+  completionDate: string | null;
 }
 
 export interface ListJSON {

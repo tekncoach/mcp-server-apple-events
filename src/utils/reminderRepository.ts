@@ -26,6 +26,7 @@ class ReminderRepository {
       'notes',
       'url',
       'dueDate',
+      'completionDate',
     ]) as Reminder;
 
     // Pass dueDate as-is from Swift CLI to avoid double timezone conversion
@@ -33,6 +34,13 @@ class ReminderRepository {
       normalizedReminder.dueDate = reminder.dueDate;
     } else {
       delete normalizedReminder.dueDate;
+    }
+
+    // Pass completionDate as-is from Swift CLI
+    if (reminder.completionDate) {
+      normalizedReminder.completionDate = reminder.completionDate;
+    } else {
+      delete normalizedReminder.completionDate;
     }
 
     return normalizedReminder;

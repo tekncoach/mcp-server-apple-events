@@ -14,6 +14,7 @@ export interface Reminder {
   url?: string; // Native URL field (currently limited by EventKit API)
   list: string;
   isCompleted: boolean;
+  completionDate?: string; // Date when reminder was completed (read-only)
 }
 
 /**
