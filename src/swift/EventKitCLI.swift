@@ -338,27 +338,48 @@ class RemindersManager {
             }
         }
 
-        // Handle geofence: add or update location-based alarm
-        if let geoTitle = geofenceTitle,
-           let lat = geofenceLatitude,
-           let lng = geofenceLongitude,
-           let proximityStr = geofenceProximity {
-            // Remove existing location-based alarms
-            if let alarms = reminder.alarms {
-                for alarm in alarms where alarm.structuredLocation != nil {
-                    reminder.removeAlarm(alarm)
+        // Handle geofence: add, update, or modify existing location-based alarm
+        let hasAnyGeofenceParam = geofenceTitle != nil || geofenceLatitude != nil || geofenceLongitude != nil || geofenceRadius != nil || geofenceProximity != nil
+
+        if hasAnyGeofenceParam {
+            // Find existing geofence alarm
+            let existingAlarm = reminder.alarms?.first(where: { $0.structuredLocation != nil })
+            let existingLocation = existingAlarm?.structuredLocation
+            let existingGeoLocation = existingLocation?.geoLocation
+
+            // Determine final values (new value or existing value)
+            let finalTitle = geofenceTitle ?? existingLocation?.title ?? "Location"
+            let finalLat = geofenceLatitude ?? existingGeoLocation?.coordinate.latitude
+            let finalLng = geofenceLongitude ?? existingGeoLocation?.coordinate.longitude
+            let finalRadius = geofenceRadius ?? (existingLocation?.radius ?? 100)
+            let finalProximity: String
+            if let proximityStr = geofenceProximity {
+                finalProximity = proximityStr
+            } else if let existing = existingAlarm {
+                finalProximity = existing.proximity == .leave ? "leave" : "enter"
+            } else {
+                finalProximity = "enter"
+            }
+
+            // Only create geofence if we have coordinates (either new or existing)
+            if let lat = finalLat, let lng = finalLng {
+                // Remove existing location-based alarms
+                if let alarms = reminder.alarms {
+                    for alarm in alarms where alarm.structuredLocation != nil {
+                        reminder.removeAlarm(alarm)
+                    }
                 }
+                // Add new/updated geofence alarm
+                let location = EKStructuredLocation(title: finalTitle)
+                location.geoLocation = CLLocation(latitude: lat, longitude: lng)
+                if finalRadius > 0 {
+                    location.radius = finalRadius
+                }
+                let alarm = EKAlarm()
+                alarm.structuredLocation = location
+                alarm.proximity = finalProximity == "leave" ? .leave : .enter
+                reminder.addAlarm(alarm)
             }
-            // Add new geofence alarm
-            let location = EKStructuredLocation(title: geoTitle)
-            location.geoLocation = CLLocation(latitude: lat, longitude: lng)
-            if let radius = geofenceRadius, radius > 0 {
-                location.radius = radius
-            }
-            let alarm = EKAlarm()
-            alarm.structuredLocation = location
-            alarm.proximity = proximityStr == "leave" ? .leave : .enter
-            reminder.addAlarm(alarm)
         }
 
         try eventStore.save(reminder, commit: true)
