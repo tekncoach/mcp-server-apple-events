@@ -265,6 +265,8 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
+        completionDate: null,
         geofence: {
           title: 'Office',
           latitude: 48.8566,
@@ -308,6 +310,8 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
+        completionDate: null,
         geofence: {
           title: 'Home',
           latitude: 37.7749,
@@ -373,6 +377,8 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
+        completionDate: null,
         geofence: {
           title: 'New Office',
           latitude: 40.7128,
@@ -418,6 +424,8 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
+        completionDate: null,
         geofence: {
           title: 'Office',
           latitude: 48.8566,
@@ -455,6 +463,8 @@ describe('Tool Handlers', () => {
         notes: null,
         url: null,
         dueDate: null,
+        priority: null,
+        completionDate: null,
         geofence: {
           title: 'Home',
           latitude: 37.7749,
@@ -475,6 +485,35 @@ describe('Tool Handlers', () => {
         expect.objectContaining({
           id: 'geo-101',
           geofenceProximity: 'leave',
+        }),
+      );
+    });
+
+    it('should pass empty geofenceTitle for geofence removal', async () => {
+      const updatedReminder = {
+        id: 'geo-remove',
+        title: 'Reminder without geofence',
+        isCompleted: false,
+        list: 'Work',
+        notes: null,
+        dueDate: null,
+        url: null,
+        priority: null,
+        completionDate: null,
+        geofence: null, // Geofence was removed
+      };
+      mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
+
+      await handleUpdateReminder({
+        action: 'update',
+        id: 'geo-remove',
+        geofenceTitle: '', // Empty string signals removal
+      });
+
+      expect(mockReminderRepository.updateReminder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'geo-remove',
+          geofenceTitle: '',
         }),
       );
     });

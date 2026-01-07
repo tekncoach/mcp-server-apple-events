@@ -9,13 +9,14 @@
 
 /**
  * Adds an optional string argument to the args array if the value is defined
+ * Note: Empty strings are passed through to support signals like empty geofenceTitle for removal
  */
 export function addOptionalArg(
   args: string[],
   flag: string,
   value: string | undefined,
 ): void {
-  if (value) {
+  if (value !== undefined) {
     args.push(flag, value);
   }
 }

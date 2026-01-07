@@ -193,6 +193,11 @@ describe('ValidationSchemas', () => {
           ).not.toThrow();
         });
 
+        it('should allow empty string for geofence removal', () => {
+          // Empty string signals removal of existing geofence
+          expect(() => SafeGeofenceTitleSchema.parse('')).not.toThrow();
+        });
+
         it('should reject titles that are too long', () => {
           const longTitle = 'a'.repeat(201);
           expect(() => SafeGeofenceTitleSchema.parse(longTitle)).toThrow();

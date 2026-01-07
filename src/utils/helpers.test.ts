@@ -24,10 +24,11 @@ describe('helpers', () => {
       expect(args).toEqual([]);
     });
 
-    it('should not add argument when value is empty string', () => {
+    it('should add argument when value is empty string (for removal signals)', () => {
+      // Empty string is valid for geofence removal signal
       const args: string[] = [];
-      addOptionalArg(args, '--title', '');
-      expect(args).toEqual([]);
+      addOptionalArg(args, '--geofenceTitle', '');
+      expect(args).toEqual(['--geofenceTitle', '']);
     });
   });
 

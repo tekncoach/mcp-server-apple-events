@@ -3,7 +3,7 @@
  * Repository pattern implementation for reminder data access operations using EventKitCLI.
  */
 
-import type { Reminder, ReminderList } from '../types/index.js';
+import type { Geofence, Reminder, ReminderList } from '../types/index.js';
 import type {
   CreateReminderData,
   ListJSON,
@@ -14,7 +14,6 @@ import type {
 import { executeCli } from './cliExecutor.js';
 import type { ReminderFilters } from './dateFiltering.js';
 import { applyReminderFilters } from './dateFiltering.js';
-import type { Geofence } from '../types/index.js';
 import {
   addOptionalArg,
   addOptionalBooleanArg,
@@ -23,7 +22,9 @@ import {
 } from './helpers.js';
 
 class ReminderRepository {
-  private mapGeofence(geofence: ReminderJSON['geofence']): Geofence | undefined {
+  private mapGeofence(
+    geofence: ReminderJSON['geofence'],
+  ): Geofence | undefined {
     if (!geofence) return undefined;
     return {
       title: geofence.title,
