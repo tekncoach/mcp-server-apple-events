@@ -332,15 +332,12 @@ class RemindersManager {
         let list = EKCalendar(for: .reminder, eventStore: eventStore)
         list.title = title
         // Set source from default reminders calendar, or find iCloud/local source
-        if let source = eventStore.defaultCalendarForNewReminders()?.source {
-            list.source = source
-        } else if let source = eventStore.sources.first(where: { $0.sourceType == .calDAV }) {
-            list.source = source
-        } else if let source = eventStore.sources.first(where: { $0.sourceType == .local }) {
-            list.source = source
-        } else {
+        guard let source = eventStore.defaultCalendarForNewReminders()?.source
+            ?? eventStore.sources.first(where: { $0.sourceType == .calDAV })
+            ?? eventStore.sources.first(where: { $0.sourceType == .local }) else {
             throw NSError(domain: "", code: 500, userInfo: [NSLocalizedDescriptionKey: "No calendar source available. Check iCloud or local account settings."])
         }
+        list.source = source
         try eventStore.saveCalendar(list, commit: true)
         return list.toJSON()
     }
