@@ -487,6 +487,35 @@ describe('ReminderRepository', () => {
       ]);
       expect(result).toBe(mockResult);
     });
+
+    it('should handle list names with special characters', async () => {
+      const mockResult: ReminderList = {
+        id: '789',
+        title: 'Work & Personal (2024)',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      const result = await repository.createReminderList(
+        'Work & Personal (2024)',
+      );
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create-list',
+        '--name',
+        'Work & Personal (2024)',
+      ]);
+      expect(result).toEqual(mockResult);
+    });
+
+    it('should propagate CLI errors', async () => {
+      mockExecuteCli.mockRejectedValue(new Error('No calendar source available.'));
+
+      await expect(repository.createReminderList('Test')).rejects.toThrow(
+        'No calendar source available.',
+      );
+    });
   });
 
   describe('updateReminderList', () => {
