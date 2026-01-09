@@ -20,6 +20,8 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}.*$/;
 // Prevents SSRF attacks while allowing legitimate external URLs
 const URL_PATTERN =
   /^https?:\/\/(?!(?:127\.|192\.168\.|10\.|localhost|0\.0\.0\.0))[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*(?:\/[^\s<>"{}|\\^`[\]]*)?$/i;
+// Hex color pattern (with or without #)
+const HEX_COLOR_PATTERN = /^#?[0-9A-Fa-f]{6}$/;
 
 // Maximum lengths for security (imported from constants.ts)
 
@@ -82,6 +84,10 @@ export const RequiredListNameSchema = createSafeTextSchema(
   VALIDATION.MAX_LIST_NAME_LENGTH,
   'List name',
 );
+export const SafeHexColorSchema = z
+  .string()
+  .regex(HEX_COLOR_PATTERN, 'Color must be a valid hex color (e.g., #FF5733)')
+  .optional();
 export const SafeSearchSchema = createOptionalSafeTextSchema(
   VALIDATION.MAX_SEARCH_LENGTH,
   'Search term',
@@ -207,12 +213,18 @@ export const ReadCalendarsSchema = z.object({});
 
 export const CreateReminderListSchema = z.object({
   name: RequiredListNameSchema,
+  color: SafeHexColorSchema,
 });
 
-export const UpdateReminderListSchema = z.object({
-  name: RequiredListNameSchema,
-  newName: RequiredListNameSchema,
-});
+export const UpdateReminderListSchema = z
+  .object({
+    name: RequiredListNameSchema,
+    newName: SafeListNameSchema,
+    color: SafeHexColorSchema,
+  })
+  .refine((data) => data.newName || data.color, {
+    message: 'At least one of newName or color must be provided',
+  });
 
 export const DeleteReminderListSchema = z.object({
   name: RequiredListNameSchema,

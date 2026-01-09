@@ -231,16 +231,75 @@ describe('ValidationSchemas', () => {
     });
 
     describe('UpdateReminderListSchema', () => {
-      it('should validate update list input with both required fields', () => {
+      it('should validate update list input with newName', () => {
         const validInput = {
           name: 'Old Name',
           newName: 'New Name',
         };
 
         expect(() => UpdateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should validate update list input with color only', () => {
+        const validInput = {
+          name: 'Old Name',
+          color: '#FF5733',
+        };
+
+        expect(() => UpdateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should validate update list input with both newName and color', () => {
+        const validInput = {
+          name: 'Old Name',
+          newName: 'New Name',
+          color: '#00FF00',
+        };
+
+        expect(() => UpdateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should reject update without newName or color', () => {
         expect(() => UpdateReminderListSchema.parse({ name: 'Old' })).toThrow();
+      });
+
+      it('should reject invalid hex color', () => {
+        expect(() =>
+          UpdateReminderListSchema.parse({ name: 'Old', color: 'invalid' }),
+        ).toThrow();
+        expect(() =>
+          UpdateReminderListSchema.parse({ name: 'Old', color: '#GGG' }),
+        ).toThrow();
+      });
+
+      it('should reject without name', () => {
         expect(() =>
           UpdateReminderListSchema.parse({ newName: 'New' }),
+        ).toThrow();
+      });
+    });
+
+    describe('CreateReminderListSchema color', () => {
+      it('should validate create list with color', () => {
+        const validInput = {
+          name: 'New List',
+          color: '#FF5733',
+        };
+
+        expect(() => CreateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should validate create list without color', () => {
+        const validInput = {
+          name: 'New List',
+        };
+
+        expect(() => CreateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should reject invalid hex color', () => {
+        expect(() =>
+          CreateReminderListSchema.parse({ name: 'New List', color: 'red' }),
         ).toThrow();
       });
     });

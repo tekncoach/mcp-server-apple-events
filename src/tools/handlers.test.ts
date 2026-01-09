@@ -228,7 +228,7 @@ describe('Tool Handlers', () => {
 
   describe('handleCreateReminderList', () => {
     it('should return a Markdown success message with ID', async () => {
-      const newList = { id: 'list-abc', title: 'New List' };
+      const newList = { id: 'list-abc', title: 'New List', color: null };
       mockReminderRepository.createReminderList.mockResolvedValue(newList);
       const result = await handleCreateReminderList({
         action: 'create',
@@ -242,7 +242,11 @@ describe('Tool Handlers', () => {
 
   describe('handleUpdateReminderList', () => {
     it('should return a Markdown success message with ID', async () => {
-      const updatedList = { id: 'list-def', title: 'Updated Name' };
+      const updatedList = {
+        id: 'list-def',
+        title: 'Updated Name',
+        color: null,
+      };
       mockReminderRepository.updateReminderList.mockResolvedValue(updatedList);
       const result = await handleUpdateReminderList({
         action: 'update',

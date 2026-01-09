@@ -9,7 +9,7 @@ struct ReadResult: Codable { let lists: [ListJSON]; let reminders: [ReminderJSON
 struct DeleteResult: Codable { let id: String; let deleted = true }
 struct DeleteListResult: Codable { let title: String; let deleted = true }
 struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String? }
-struct ListJSON: Codable { let id: String, title: String }
+struct ListJSON: Codable { let id: String, title: String, color: String? }
 struct EventJSON: Codable { let id: String, title: String, calendar: String, startDate: String, endDate: String, notes: String?, location: String?, url: String?, isAllDay: Bool }
 struct CalendarJSON: Codable { let id: String, title: String }
 struct EventsReadResult: Codable { let calendars: [CalendarJSON]; let events: [EventJSON] }
@@ -328,8 +328,33 @@ class RemindersManager {
         }
         try eventStore.remove(reminder, commit: true)
     }
-    func createList(title: String) throws -> ListJSON { let list = EKCalendar(for: .reminder, eventStore: eventStore); list.title = title; try eventStore.saveCalendar(list, commit: true); return list.toJSON() }
-    func updateList(currentName: String, newName: String) throws -> ListJSON { let list = try findList(named: currentName); list.title = newName; try eventStore.saveCalendar(list, commit: true); return list.toJSON() }
+    func createList(title: String, color: String?) throws -> ListJSON {
+        let list = EKCalendar(for: .reminder, eventStore: eventStore)
+        list.title = title
+        if let colorHex = color, let cgColor = hexToCGColor(colorHex) {
+            list.cgColor = cgColor
+        }
+        // Set source - prefer local source, fallback to first available
+        if let localSource = eventStore.sources.first(where: { $0.sourceType == .local }) {
+            list.source = localSource
+        } else if let source = eventStore.sources.first(where: { $0.sourceType == .calDAV || $0.sourceType == .exchange }) {
+            list.source = source
+        } else if let source = eventStore.defaultCalendarForNewReminders()?.source {
+            list.source = source
+        }
+        try eventStore.saveCalendar(list, commit: true)
+        return list.toJSON()
+    }
+
+    func updateList(currentName: String, newName: String?, color: String?) throws -> ListJSON {
+        let list = try findList(named: currentName)
+        if let newName = newName { list.title = newName }
+        if let colorHex = color, let cgColor = hexToCGColor(colorHex) {
+            list.cgColor = cgColor
+        }
+        try eventStore.saveCalendar(list, commit: true)
+        return list.toJSON()
+    }
     func deleteList(title: String) throws { try eventStore.removeCalendar(try findList(named: title), commit: true) }
     
     // MARK: Calendar Events Management
@@ -527,9 +552,31 @@ extension EKReminder {
         )
     }
 }
-extension EKCalendar { 
-    func toJSON() -> ListJSON { ListJSON(id: self.calendarIdentifier, title: self.title) }
+extension EKCalendar {
+    func toJSON() -> ListJSON {
+        ListJSON(id: self.calendarIdentifier, title: self.title, color: cgColorToHex(self.cgColor))
+    }
     func toCalendarJSON() -> CalendarJSON { CalendarJSON(id: self.calendarIdentifier, title: self.title) }
+}
+
+private func cgColorToHex(_ cgColor: CGColor) -> String? {
+    guard let components = cgColor.components, components.count >= 3 else { return nil }
+    let r = Int(components[0] * 255)
+    let g = Int(components[1] * 255)
+    let b = Int(components[2] * 255)
+    return String(format: "#%02X%02X%02X", r, g, b)
+}
+
+private func hexToCGColor(_ hex: String) -> CGColor? {
+    var hexString = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    if hexString.hasPrefix("#") { hexString.removeFirst() }
+    guard hexString.count == 6 else { return nil }
+    var rgbValue: UInt64 = 0
+    Scanner(string: hexString).scanHexInt64(&rgbValue)
+    let r = CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0
+    let g = CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0
+    let b = CGFloat(rgbValue & 0x0000FF) / 255.0
+    return CGColor(red: r, green: g, blue: b, alpha: 1.0)
 }
 
 private func formatEventDate(_ date: Date, preferredTimeZone: TimeZone, includeTime: Bool) -> String {
@@ -648,10 +695,13 @@ func main() {
                 try manager.deleteReminder(id: id); print(String(data: try encoder.encode(StandardOutput(result: DeleteResult(id: id))), encoding: .utf8)!)
             case "create-list":
                 guard let title = parser.get("name") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--name required."]) }
-                print(String(data: try encoder.encode(StandardOutput(result: try manager.createList(title: title))), encoding: .utf8)!)
+                print(String(data: try encoder.encode(StandardOutput(result: try manager.createList(title: title, color: parser.get("color")))), encoding: .utf8)!)
             case "update-list":
-                guard let name = parser.get("name"), let newName = parser.get("newName") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--name and --newName required."]) }
-                print(String(data: try encoder.encode(StandardOutput(result: try manager.updateList(currentName: name, newName: newName))), encoding: .utf8)!)
+                guard let name = parser.get("name") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--name required."]) }
+                let newName = parser.get("newName")
+                let color = parser.get("color")
+                if newName == nil && color == nil { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--newName or --color required."]) }
+                print(String(data: try encoder.encode(StandardOutput(result: try manager.updateList(currentName: name, newName: newName, color: color))), encoding: .utf8)!)
             case "delete-list":
                 guard let title = parser.get("name") else { throw NSError(domain: "", code: 400, userInfo: [NSLocalizedDescriptionKey: "--name required."]) }
                 try manager.deleteList(title: title); print(String(data: try encoder.encode(StandardOutput(result: DeleteListResult(title: title))), encoding: .utf8)!)

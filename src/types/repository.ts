@@ -20,6 +20,7 @@ export interface ReminderJSON {
 export interface ListJSON {
   id: string;
   title: string;
+  color?: string | null;
 }
 
 export interface EventJSON {
