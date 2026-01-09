@@ -11,9 +11,13 @@ import {
   ReadRemindersSchema,
   RequiredListNameSchema,
   SafeDateSchema,
+  SafeDaysOfMonthSchema,
+  SafeDaysOfWeekSchema,
+  SafeDaysOfYearSchema,
   SafeGeofenceTitleSchema,
   SafeLatitudeSchema,
   SafeLongitudeSchema,
+  SafeMonthsOfYearSchema,
   SafeNoteSchema,
   SafePrioritySchema,
   SafeProximitySchema,
@@ -21,8 +25,10 @@ import {
   SafeRecurrenceFrequencySchema,
   SafeRecurrenceIntervalSchema,
   SafeRecurrenceOccurrenceCountSchema,
+  SafeSetPositionsSchema,
   SafeTextSchema,
   SafeUrlSchema,
+  SafeWeeksOfYearSchema,
   UpdateReminderListSchema,
   UpdateReminderSchema,
   ValidationError,
@@ -356,6 +362,143 @@ describe('ValidationSchemas', () => {
           expect(() =>
             SafeRecurrenceOccurrenceCountSchema.parse(5.5),
           ).toThrow();
+        });
+      });
+
+      describe('SafeDaysOfWeekSchema', () => {
+        it('should validate valid days of week array', () => {
+          expect(() => SafeDaysOfWeekSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeDaysOfWeekSchema.parse(['monday'])).not.toThrow();
+          expect(() =>
+            SafeDaysOfWeekSchema.parse(['monday', 'wednesday', 'friday']),
+          ).not.toThrow();
+          expect(() =>
+            SafeDaysOfWeekSchema.parse([
+              'sunday',
+              'monday',
+              'tuesday',
+              'wednesday',
+              'thursday',
+              'friday',
+              'saturday',
+            ]),
+          ).not.toThrow();
+        });
+
+        it('should reject invalid day names', () => {
+          expect(() => SafeDaysOfWeekSchema.parse(['mon'])).toThrow();
+          expect(() => SafeDaysOfWeekSchema.parse(['Monday'])).toThrow();
+          expect(() => SafeDaysOfWeekSchema.parse(['invalid'])).toThrow();
+        });
+
+        it('should reject non-array values', () => {
+          expect(() => SafeDaysOfWeekSchema.parse('monday')).toThrow();
+        });
+      });
+
+      describe('SafeDaysOfMonthSchema', () => {
+        it('should validate valid days of month array', () => {
+          expect(() => SafeDaysOfMonthSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([1])).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([1, 15])).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([31])).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([-1])).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([-31])).not.toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([1, -1])).not.toThrow();
+        });
+
+        it('should reject days outside valid range', () => {
+          expect(() => SafeDaysOfMonthSchema.parse([0])).toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([32])).toThrow();
+          expect(() => SafeDaysOfMonthSchema.parse([-32])).toThrow();
+        });
+
+        it('should reject non-integer values', () => {
+          expect(() => SafeDaysOfMonthSchema.parse([1.5])).toThrow();
+        });
+      });
+
+      describe('SafeMonthsOfYearSchema', () => {
+        it('should validate valid months of year array', () => {
+          expect(() => SafeMonthsOfYearSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeMonthsOfYearSchema.parse([1])).not.toThrow();
+          expect(() => SafeMonthsOfYearSchema.parse([1, 6, 12])).not.toThrow();
+          expect(() => SafeMonthsOfYearSchema.parse([12])).not.toThrow();
+        });
+
+        it('should reject months outside valid range', () => {
+          expect(() => SafeMonthsOfYearSchema.parse([0])).toThrow();
+          expect(() => SafeMonthsOfYearSchema.parse([13])).toThrow();
+          expect(() => SafeMonthsOfYearSchema.parse([-1])).toThrow();
+        });
+
+        it('should reject non-integer values', () => {
+          expect(() => SafeMonthsOfYearSchema.parse([1.5])).toThrow();
+        });
+      });
+
+      describe('SafeWeeksOfYearSchema', () => {
+        it('should validate valid weeks of year array', () => {
+          expect(() => SafeWeeksOfYearSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([1])).not.toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([1, 26])).not.toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([53])).not.toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([-1])).not.toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([-53])).not.toThrow();
+        });
+
+        it('should reject weeks outside valid range', () => {
+          expect(() => SafeWeeksOfYearSchema.parse([0])).toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([54])).toThrow();
+          expect(() => SafeWeeksOfYearSchema.parse([-54])).toThrow();
+        });
+
+        it('should reject non-integer values', () => {
+          expect(() => SafeWeeksOfYearSchema.parse([1.5])).toThrow();
+        });
+      });
+
+      describe('SafeDaysOfYearSchema', () => {
+        it('should validate valid days of year array', () => {
+          expect(() => SafeDaysOfYearSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([1])).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([1, 180])).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([366])).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([-1])).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([-366])).not.toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([1, -1])).not.toThrow();
+        });
+
+        it('should reject days outside valid range', () => {
+          expect(() => SafeDaysOfYearSchema.parse([0])).toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([367])).toThrow();
+          expect(() => SafeDaysOfYearSchema.parse([-367])).toThrow();
+        });
+
+        it('should reject non-integer values', () => {
+          expect(() => SafeDaysOfYearSchema.parse([1.5])).toThrow();
+        });
+      });
+
+      describe('SafeSetPositionsSchema', () => {
+        it('should validate valid set positions array', () => {
+          expect(() => SafeSetPositionsSchema.parse(undefined)).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([1])).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([1, 2, 3])).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([-1])).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([1, -1])).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([366])).not.toThrow();
+          expect(() => SafeSetPositionsSchema.parse([-366])).not.toThrow();
+        });
+
+        it('should reject positions outside valid range', () => {
+          expect(() => SafeSetPositionsSchema.parse([0])).toThrow();
+          expect(() => SafeSetPositionsSchema.parse([367])).toThrow();
+          expect(() => SafeSetPositionsSchema.parse([-367])).toThrow();
+        });
+
+        it('should reject non-integer values', () => {
+          expect(() => SafeSetPositionsSchema.parse([1.5])).toThrow();
         });
       });
     });

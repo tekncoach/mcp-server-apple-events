@@ -134,6 +134,53 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           description:
             'Optional number of times the reminder should repeat before stopping.',
         },
+        recurrenceDaysOfWeek: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: [
+              'sunday',
+              'monday',
+              'tuesday',
+              'wednesday',
+              'thursday',
+              'friday',
+              'saturday',
+            ],
+          },
+          description:
+            "Days of the week for weekly recurrence (e.g., ['monday', 'wednesday', 'friday'] for Mon/Wed/Fri). Use ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] for weekdays.",
+        },
+        recurrenceDaysOfMonth: {
+          type: 'array',
+          items: { type: 'number' },
+          description:
+            'Days of the month for monthly recurrence (1-31, or negative for last days: -1 = last day). Example: [1, 15] for 1st and 15th.',
+        },
+        recurrenceMonthsOfYear: {
+          type: 'array',
+          items: { type: 'number' },
+          description:
+            'Months for yearly recurrence (1-12). Example: [1, 6, 12] for January, June, December.',
+        },
+        recurrenceWeeksOfYear: {
+          type: 'array',
+          items: { type: 'number' },
+          description:
+            'Weeks of the year (1-53, or negative for last weeks). Example: [1, 26] for 1st and 26th week.',
+        },
+        recurrenceDaysOfYear: {
+          type: 'array',
+          items: { type: 'number' },
+          description:
+            'Days of the year (1-366, or negative for last days). Example: [1, -1] for first and last day.',
+        },
+        recurrenceSetPositions: {
+          type: 'array',
+          items: { type: 'number' },
+          description:
+            "Positions within the recurrence set (1-366, or negative). Used with daysOfWeek for patterns like 'first Monday' (setPositions: [1]) or 'last Friday' (setPositions: [-1]).",
+        },
         clearRecurrence: {
           type: 'boolean',
           description:

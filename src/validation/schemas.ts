@@ -177,6 +177,62 @@ export const SafeRecurrenceOccurrenceCountSchema = z
   .int('Occurrence count must be an integer')
   .min(1, 'Occurrence count must be at least 1')
   .optional();
+export const SafeDaysOfWeekSchema = z
+  .array(
+    z.enum([
+      'sunday',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ]),
+  )
+  .optional();
+export const SafeDaysOfMonthSchema = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((n) => (n >= -31 && n <= -1) || (n >= 1 && n <= 31), {
+        message: 'Day of month must be 1-31 or -1 to -31',
+      }),
+  )
+  .optional();
+export const SafeMonthsOfYearSchema = z
+  .array(z.number().int().min(1).max(12))
+  .optional();
+export const SafeWeeksOfYearSchema = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((n) => (n >= -53 && n <= -1) || (n >= 1 && n <= 53), {
+        message: 'Week of year must be 1-53 or -1 to -53',
+      }),
+  )
+  .optional();
+export const SafeDaysOfYearSchema = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((n) => (n >= -366 && n <= -1) || (n >= 1 && n <= 366), {
+        message: 'Day of year must be 1-366 or -1 to -366',
+      }),
+  )
+  .optional();
+export const SafeSetPositionsSchema = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((n) => (n >= -366 && n <= -1) || (n >= 1 && n <= 366), {
+        message: 'Set position must be 1-366 or -1 to -366',
+      }),
+  )
+  .optional();
 
 /**
  * Common field combinations for reusability
@@ -194,6 +250,12 @@ const RecurrenceFields = {
   recurrenceInterval: SafeRecurrenceIntervalSchema,
   recurrenceEndDate: SafeDateSchema,
   recurrenceOccurrenceCount: SafeRecurrenceOccurrenceCountSchema,
+  recurrenceDaysOfWeek: SafeDaysOfWeekSchema,
+  recurrenceDaysOfMonth: SafeDaysOfMonthSchema,
+  recurrenceMonthsOfYear: SafeMonthsOfYearSchema,
+  recurrenceWeeksOfYear: SafeWeeksOfYearSchema,
+  recurrenceDaysOfYear: SafeDaysOfYearSchema,
+  recurrenceSetPositions: SafeSetPositionsSchema,
 };
 
 const BaseReminderFields = {

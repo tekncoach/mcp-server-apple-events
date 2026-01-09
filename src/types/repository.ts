@@ -20,6 +20,12 @@ export interface RecurrenceJSON {
   interval: number;
   endDate: string | null;
   occurrenceCount: number | null;
+  daysOfWeek: string[] | null;
+  daysOfMonth: number[] | null;
+  monthsOfYear: number[] | null;
+  weeksOfYear: number[] | null;
+  daysOfYear: number[] | null;
+  setPositions: number[] | null;
 }
 
 export interface ReminderJSON {
@@ -93,6 +99,12 @@ export interface CreateReminderData {
   recurrenceInterval?: number;
   recurrenceEndDate?: string;
   recurrenceOccurrenceCount?: number;
+  recurrenceDaysOfWeek?: string[];
+  recurrenceDaysOfMonth?: number[];
+  recurrenceMonthsOfYear?: number[];
+  recurrenceWeeksOfYear?: number[];
+  recurrenceDaysOfYear?: number[];
+  recurrenceSetPositions?: number[];
 }
 
 export interface UpdateReminderData {
@@ -113,6 +125,12 @@ export interface UpdateReminderData {
   recurrenceInterval?: number;
   recurrenceEndDate?: string;
   recurrenceOccurrenceCount?: number;
+  recurrenceDaysOfWeek?: string[];
+  recurrenceDaysOfMonth?: number[];
+  recurrenceMonthsOfYear?: number[];
+  recurrenceWeeksOfYear?: number[];
+  recurrenceDaysOfYear?: number[];
+  recurrenceSetPositions?: number[];
   clearRecurrence?: boolean;
 }
 

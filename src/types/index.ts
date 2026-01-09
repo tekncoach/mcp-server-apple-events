@@ -15,6 +15,18 @@ export interface Geofence {
 }
 
 /**
+ * Day of week type for recurrence
+ */
+export type DayOfWeek =
+  | 'sunday'
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday';
+
+/**
  * Recurrence for repeating reminders
  */
 export interface Recurrence {
@@ -22,6 +34,12 @@ export interface Recurrence {
   interval: number;
   endDate?: string;
   occurrenceCount?: number;
+  daysOfWeek?: DayOfWeek[];
+  daysOfMonth?: number[];
+  monthsOfYear?: number[];
+  weeksOfYear?: number[];
+  daysOfYear?: number[];
+  setPositions?: number[];
 }
 
 /**
@@ -166,6 +184,12 @@ export interface RemindersToolArgs extends BaseToolArgs {
   recurrenceInterval?: number;
   recurrenceEndDate?: string;
   recurrenceOccurrenceCount?: number;
+  recurrenceDaysOfWeek?: DayOfWeek[];
+  recurrenceDaysOfMonth?: number[];
+  recurrenceMonthsOfYear?: number[];
+  recurrenceWeeksOfYear?: number[];
+  recurrenceDaysOfYear?: number[];
+  recurrenceSetPositions?: number[];
   clearRecurrence?: boolean;
 }
 

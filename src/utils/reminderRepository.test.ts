@@ -487,6 +487,402 @@ describe('ReminderRepository', () => {
         interval: 1,
       });
     });
+
+    it('should map recurrence with daysOfWeek (weekdays)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-weekdays',
+          title: 'Weekday Reminder',
+          isCompleted: false,
+          list: 'Work',
+          geofence: null,
+          recurrence: {
+            frequency: 'weekly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: [
+              'monday',
+              'tuesday',
+              'wednesday',
+              'thursday',
+              'friday',
+            ],
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'weekly',
+        interval: 1,
+        daysOfWeek: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      });
+    });
+
+    it('should map recurrence with daysOfMonth (1st and 15th)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-monthly-days',
+          title: 'Monthly Days Reminder',
+          isCompleted: false,
+          list: 'Personal',
+          geofence: null,
+          recurrence: {
+            frequency: 'monthly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: null,
+            daysOfMonth: [1, 15],
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'monthly',
+        interval: 1,
+        daysOfMonth: [1, 15],
+      });
+    });
+
+    it('should map recurrence with monthsOfYear (quarterly)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-quarterly',
+          title: 'Quarterly Reminder',
+          isCompleted: false,
+          list: 'Work',
+          geofence: null,
+          recurrence: {
+            frequency: 'yearly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: null,
+            daysOfMonth: null,
+            monthsOfYear: [1, 4, 7, 10],
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'yearly',
+        interval: 1,
+        monthsOfYear: [1, 4, 7, 10],
+      });
+    });
+
+    it('should map recurrence with setPositions (first Monday)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-first-monday',
+          title: 'First Monday Reminder',
+          isCompleted: false,
+          list: 'Personal',
+          geofence: null,
+          recurrence: {
+            frequency: 'monthly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: ['monday'],
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: [1],
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'monthly',
+        interval: 1,
+        daysOfWeek: ['monday'],
+        setPositions: [1],
+      });
+    });
+
+    it('should map recurrence with last Friday (setPositions -1)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-last-friday',
+          title: 'Last Friday Reminder',
+          isCompleted: false,
+          list: 'Work',
+          geofence: null,
+          recurrence: {
+            frequency: 'monthly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: ['friday'],
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: [-1],
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'monthly',
+        interval: 1,
+        daysOfWeek: ['friday'],
+        setPositions: [-1],
+      });
+    });
+
+    it('should map recurrence with weeksOfYear', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-weeks',
+          title: 'Specific Weeks Reminder',
+          isCompleted: false,
+          list: 'Work',
+          geofence: null,
+          recurrence: {
+            frequency: 'yearly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: null,
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: [1, 26, 52],
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'yearly',
+        interval: 1,
+        weeksOfYear: [1, 26, 52],
+      });
+    });
+
+    it('should map recurrence with daysOfYear (first and last day)', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-days-year',
+          title: 'First and Last Day Reminder',
+          isCompleted: false,
+          list: 'Personal',
+          geofence: null,
+          recurrence: {
+            frequency: 'yearly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: null,
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: [1, -1],
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence).toEqual({
+        frequency: 'yearly',
+        interval: 1,
+        daysOfYear: [1, -1],
+      });
+    });
+
+    it('should map unknown day of week to monday', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-unknown-day',
+          title: 'Unknown Day Reminder',
+          isCompleted: false,
+          list: 'Default',
+          geofence: null,
+          recurrence: {
+            frequency: 'weekly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: ['unknown', 'monday'],
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence?.daysOfWeek).toEqual(['monday', 'monday']);
+    });
+
+    it('should handle all valid days of week', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-all-days',
+          title: 'All Days Reminder',
+          isCompleted: false,
+          list: 'Default',
+          geofence: null,
+          recurrence: {
+            frequency: 'weekly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: [
+              'sunday',
+              'monday',
+              'tuesday',
+              'wednesday',
+              'thursday',
+              'friday',
+              'saturday',
+            ],
+            daysOfMonth: null,
+            monthsOfYear: null,
+            weeksOfYear: null,
+            daysOfYear: null,
+            setPositions: null,
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      expect(result[0].recurrence?.daysOfWeek).toEqual([
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ]);
+    });
+
+    it('should handle empty arrays as no values', async () => {
+      const mockReminders = [
+        {
+          id: 'rec-empty-arrays',
+          title: 'Empty Arrays Reminder',
+          isCompleted: false,
+          list: 'Default',
+          geofence: null,
+          recurrence: {
+            frequency: 'weekly',
+            interval: 1,
+            endDate: null,
+            occurrenceCount: null,
+            daysOfWeek: [],
+            daysOfMonth: [],
+            monthsOfYear: [],
+            weeksOfYear: [],
+            daysOfYear: [],
+            setPositions: [],
+          },
+        },
+      ];
+
+      mockExecuteCli.mockResolvedValue({
+        reminders: mockReminders,
+        lists: [],
+      });
+      mockApplyReminderFilters.mockImplementation((reminders) => reminders);
+
+      const result = await repository.findReminders();
+
+      // Empty arrays should not be included in the result
+      expect(result[0].recurrence).toEqual({
+        frequency: 'weekly',
+        interval: 1,
+      });
+    });
   });
 
   describe('findAllLists', () => {
@@ -726,6 +1122,274 @@ describe('ReminderRepository', () => {
       expect(args).toContain('1');
       expect(args).not.toContain('--recurrenceEndDate');
       expect(args).not.toContain('--recurrenceOccurrenceCount');
+    });
+
+    it('should create reminder with daysOfWeek (weekdays)', async () => {
+      const data = {
+        title: 'Weekday Reminder',
+        recurrenceFrequency: 'weekly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfWeek: [
+          'monday' as const,
+          'tuesday' as const,
+          'wednesday' as const,
+          'thursday' as const,
+          'friday' as const,
+        ],
+      };
+      const mockResult: Reminder = {
+        id: '1001',
+        title: 'Weekday Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Weekday Reminder',
+        '--recurrenceFrequency',
+        'weekly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfWeek',
+        'monday,tuesday,wednesday,thursday,friday',
+      ]);
+    });
+
+    it('should create reminder with daysOfMonth', async () => {
+      const data = {
+        title: 'Bimonthly Reminder',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfMonth: [1, 15],
+      };
+      const mockResult: Reminder = {
+        id: '1002',
+        title: 'Bimonthly Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Bimonthly Reminder',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfMonth',
+        '1,15',
+      ]);
+    });
+
+    it('should create reminder with monthsOfYear (quarterly)', async () => {
+      const data = {
+        title: 'Quarterly Reminder',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceInterval: 1,
+        recurrenceMonthsOfYear: [1, 4, 7, 10],
+      };
+      const mockResult: Reminder = {
+        id: '1003',
+        title: 'Quarterly Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Quarterly Reminder',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceMonthsOfYear',
+        '1,4,7,10',
+      ]);
+    });
+
+    it('should create reminder with setPositions (first Monday)', async () => {
+      const data = {
+        title: 'First Monday Reminder',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfWeek: ['monday' as const],
+        recurrenceSetPositions: [1],
+      };
+      const mockResult: Reminder = {
+        id: '1004',
+        title: 'First Monday Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'First Monday Reminder',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfWeek',
+        'monday',
+        '--recurrenceSetPositions',
+        '1',
+      ]);
+    });
+
+    it('should create reminder with last Friday (setPositions -1)', async () => {
+      const data = {
+        title: 'Last Friday Reminder',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfWeek: ['friday' as const],
+        recurrenceSetPositions: [-1],
+      };
+      const mockResult: Reminder = {
+        id: '1005',
+        title: 'Last Friday Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Last Friday Reminder',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfWeek',
+        'friday',
+        '--recurrenceSetPositions',
+        '-1',
+      ]);
+    });
+
+    it('should create reminder with weeksOfYear', async () => {
+      const data = {
+        title: 'Specific Weeks Reminder',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceInterval: 1,
+        recurrenceWeeksOfYear: [1, 26, 52],
+      };
+      const mockResult: Reminder = {
+        id: '1006',
+        title: 'Specific Weeks Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'Specific Weeks Reminder',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceWeeksOfYear',
+        '1,26,52',
+      ]);
+    });
+
+    it('should create reminder with daysOfYear (first and last day)', async () => {
+      const data = {
+        title: 'First and Last Day Reminder',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfYear: [1, -1],
+      };
+      const mockResult: Reminder = {
+        id: '1007',
+        title: 'First and Last Day Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'create',
+        '--title',
+        'First and Last Day Reminder',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfYear',
+        '1,-1',
+      ]);
+    });
+
+    it('should not include empty arrays in CLI args', async () => {
+      const data = {
+        title: 'No Empty Arrays Reminder',
+        recurrenceFrequency: 'weekly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfWeek: [] as (
+          | 'monday'
+          | 'tuesday'
+          | 'wednesday'
+          | 'thursday'
+          | 'friday'
+          | 'saturday'
+          | 'sunday'
+        )[],
+        recurrenceDaysOfMonth: [] as number[],
+      };
+      const mockResult: Reminder = {
+        id: '1008',
+        title: 'No Empty Arrays Reminder',
+        isCompleted: false,
+        list: 'Default',
+      };
+
+      mockExecuteCli.mockResolvedValue(mockResult);
+
+      await repository.createReminder(data);
+
+      const args = mockExecuteCli.mock.calls[0][0];
+      expect(args).not.toContain('--recurrenceDaysOfWeek');
+      expect(args).not.toContain('--recurrenceDaysOfMonth');
     });
   });
 
@@ -967,6 +1631,203 @@ describe('ReminderRepository', () => {
       const args = mockExecuteCli.mock.calls[0][0];
       expect(args).toContain('--clearRecurrence');
       expect(args).toContain('true');
+    });
+
+    it('should update reminder with daysOfWeek (weekdays)', async () => {
+      const data = {
+        id: 'rec-weekdays',
+        recurrenceFrequency: 'weekly' as const,
+        recurrenceInterval: 1,
+        recurrenceDaysOfWeek: [
+          'monday' as const,
+          'tuesday' as const,
+          'wednesday' as const,
+          'thursday' as const,
+          'friday' as const,
+        ],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-weekdays' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-weekdays',
+        '--recurrenceFrequency',
+        'weekly',
+        '--recurrenceInterval',
+        '1',
+        '--recurrenceDaysOfWeek',
+        'monday,tuesday,wednesday,thursday,friday',
+      ]);
+    });
+
+    it('should update reminder with daysOfMonth', async () => {
+      const data = {
+        id: 'rec-monthly',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceDaysOfMonth: [1, 15, -1],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-monthly' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-monthly',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceDaysOfMonth',
+        '1,15,-1',
+      ]);
+    });
+
+    it('should update reminder with monthsOfYear', async () => {
+      const data = {
+        id: 'rec-yearly',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceMonthsOfYear: [1, 6, 12],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-yearly' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-yearly',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceMonthsOfYear',
+        '1,6,12',
+      ]);
+    });
+
+    it('should update reminder with setPositions', async () => {
+      const data = {
+        id: 'rec-positions',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceDaysOfWeek: ['monday' as const],
+        recurrenceSetPositions: [1, -1],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-positions' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-positions',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceDaysOfWeek',
+        'monday',
+        '--recurrenceSetPositions',
+        '1,-1',
+      ]);
+    });
+
+    it('should update reminder with weeksOfYear', async () => {
+      const data = {
+        id: 'rec-weeks',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceWeeksOfYear: [1, 26],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-weeks' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-weeks',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceWeeksOfYear',
+        '1,26',
+      ]);
+    });
+
+    it('should update reminder with daysOfYear', async () => {
+      const data = {
+        id: 'rec-days',
+        recurrenceFrequency: 'yearly' as const,
+        recurrenceDaysOfYear: [1, 180, -1],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-days' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-days',
+        '--recurrenceFrequency',
+        'yearly',
+        '--recurrenceDaysOfYear',
+        '1,180,-1',
+      ]);
+    });
+
+    it('should update reminder with all advanced recurrence fields', async () => {
+      const data = {
+        id: 'rec-full',
+        recurrenceFrequency: 'monthly' as const,
+        recurrenceInterval: 2,
+        recurrenceEndDate: '2026-12-31',
+        recurrenceOccurrenceCount: 24,
+        recurrenceDaysOfWeek: ['monday' as const, 'friday' as const],
+        recurrenceDaysOfMonth: [1, 15],
+        recurrenceMonthsOfYear: [1, 4, 7, 10],
+        recurrenceWeeksOfYear: [1, 52],
+        recurrenceDaysOfYear: [1, -1],
+        recurrenceSetPositions: [1, -1],
+      };
+
+      mockExecuteCli.mockResolvedValue({ id: 'rec-full' });
+
+      await repository.updateReminder(data);
+
+      expect(mockExecuteCli).toHaveBeenCalledWith([
+        '--action',
+        'update',
+        '--id',
+        'rec-full',
+        '--recurrenceFrequency',
+        'monthly',
+        '--recurrenceInterval',
+        '2',
+        '--recurrenceEndDate',
+        '2026-12-31',
+        '--recurrenceOccurrenceCount',
+        '24',
+        '--recurrenceDaysOfWeek',
+        'monday,friday',
+        '--recurrenceDaysOfMonth',
+        '1,15',
+        '--recurrenceMonthsOfYear',
+        '1,4,7,10',
+        '--recurrenceWeeksOfYear',
+        '1,52',
+        '--recurrenceDaysOfYear',
+        '1,-1',
+        '--recurrenceSetPositions',
+        '1,-1',
+      ]);
     });
   });
 

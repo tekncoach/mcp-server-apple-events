@@ -37,18 +37,96 @@ const formatGeofence = (geofence: Geofence): string => {
  * Formats a recurrence as a human-readable string
  */
 const formatRecurrence = (recurrence: Recurrence): string => {
+  const parts: string[] = [];
+
+  // Map frequency to singular/plural forms
+  const frequencyMap: Record<string, { singular: string; plural: string }> = {
+    daily: { singular: 'daily', plural: 'days' },
+    weekly: { singular: 'weekly', plural: 'weeks' },
+    monthly: { singular: 'monthly', plural: 'months' },
+    yearly: { singular: 'yearly', plural: 'years' },
+  };
+
+  // Base frequency with interval
+  const freqInfo = frequencyMap[recurrence.frequency] || {
+    singular: recurrence.frequency,
+    plural: recurrence.frequency,
+  };
   const interval =
     recurrence.interval > 1 ? `Every ${recurrence.interval} ` : '';
   const frequency =
-    recurrence.interval > 1
-      ? `${recurrence.frequency.replace('ly', '')}s`
-      : recurrence.frequency.replace('ly', '');
-  let result = `${interval}${frequency}`;
+    recurrence.interval > 1 ? freqInfo.plural : freqInfo.singular;
+  parts.push(`${interval}${frequency}`);
+
+  // Days of week (e.g., "on Monday, Wednesday, Friday")
+  if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+    const days = recurrence.daysOfWeek.map(
+      (d) => d.charAt(0).toUpperCase() + d.slice(1),
+    );
+    parts.push(`on ${days.join(', ')}`);
+  }
+
+  // Days of month (e.g., "on day 1, 15")
+  if (recurrence.daysOfMonth && recurrence.daysOfMonth.length > 0) {
+    const days = recurrence.daysOfMonth.map((d) =>
+      d < 0 ? `${Math.abs(d)} from end` : String(d),
+    );
+    parts.push(`on day ${days.join(', ')}`);
+  }
+
+  // Months of year (e.g., "in Jan, Jun, Dec")
+  if (recurrence.monthsOfYear && recurrence.monthsOfYear.length > 0) {
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    const months = recurrence.monthsOfYear.map((m) => monthNames[m - 1] || m);
+    parts.push(`in ${months.join(', ')}`);
+  }
+
+  // Weeks of year
+  if (recurrence.weeksOfYear && recurrence.weeksOfYear.length > 0) {
+    parts.push(`in week ${recurrence.weeksOfYear.join(', ')}`);
+  }
+
+  // Days of year
+  if (recurrence.daysOfYear && recurrence.daysOfYear.length > 0) {
+    parts.push(`on year day ${recurrence.daysOfYear.join(', ')}`);
+  }
+
+  // Set positions (e.g., "1st, last")
+  if (recurrence.setPositions && recurrence.setPositions.length > 0) {
+    const positions = recurrence.setPositions.map((p) => {
+      if (p === 1) return '1st';
+      if (p === 2) return '2nd';
+      if (p === 3) return '3rd';
+      if (p === -1) return 'last';
+      if (p === -2) return '2nd to last';
+      if (p < 0) return `${Math.abs(p)}th from end`;
+      return `${p}th`;
+    });
+    parts.push(`(${positions.join(', ')})`);
+  }
+
+  let result = parts.join(' ');
+
+  // End condition
   if (recurrence.endDate) {
     result += ` until ${recurrence.endDate}`;
   } else if (recurrence.occurrenceCount) {
     result += ` (${recurrence.occurrenceCount} times)`;
   }
+
   return result;
 };
 
@@ -120,6 +198,12 @@ export const handleCreateReminder = async (
       recurrenceInterval: validatedArgs.recurrenceInterval,
       recurrenceEndDate: validatedArgs.recurrenceEndDate,
       recurrenceOccurrenceCount: validatedArgs.recurrenceOccurrenceCount,
+      recurrenceDaysOfWeek: validatedArgs.recurrenceDaysOfWeek,
+      recurrenceDaysOfMonth: validatedArgs.recurrenceDaysOfMonth,
+      recurrenceMonthsOfYear: validatedArgs.recurrenceMonthsOfYear,
+      recurrenceWeeksOfYear: validatedArgs.recurrenceWeeksOfYear,
+      recurrenceDaysOfYear: validatedArgs.recurrenceDaysOfYear,
+      recurrenceSetPositions: validatedArgs.recurrenceSetPositions,
     });
     return formatSuccessMessage(
       'created',
@@ -153,6 +237,12 @@ export const handleUpdateReminder = async (
       recurrenceInterval: validatedArgs.recurrenceInterval,
       recurrenceEndDate: validatedArgs.recurrenceEndDate,
       recurrenceOccurrenceCount: validatedArgs.recurrenceOccurrenceCount,
+      recurrenceDaysOfWeek: validatedArgs.recurrenceDaysOfWeek,
+      recurrenceDaysOfMonth: validatedArgs.recurrenceDaysOfMonth,
+      recurrenceMonthsOfYear: validatedArgs.recurrenceMonthsOfYear,
+      recurrenceWeeksOfYear: validatedArgs.recurrenceWeeksOfYear,
+      recurrenceDaysOfYear: validatedArgs.recurrenceDaysOfYear,
+      recurrenceSetPositions: validatedArgs.recurrenceSetPositions,
       clearRecurrence: validatedArgs.clearRecurrence,
     });
     return formatSuccessMessage(

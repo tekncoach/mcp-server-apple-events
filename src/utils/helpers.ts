@@ -48,6 +48,32 @@ export function addOptionalNumberArg(
 }
 
 /**
+ * Adds an optional string array argument to the args array as comma-separated values
+ */
+export function addOptionalStringArrayArg(
+  args: string[],
+  flag: string,
+  value: string[] | undefined,
+): void {
+  if (value !== undefined && value.length > 0) {
+    args.push(flag, value.join(','));
+  }
+}
+
+/**
+ * Adds an optional number array argument to the args array as comma-separated values
+ */
+export function addOptionalNumberArrayArg(
+  args: string[],
+  flag: string,
+  value: number[] | undefined,
+): void {
+  if (value !== undefined && value.length > 0) {
+    args.push(flag, value.map(String).join(','));
+  }
+}
+
+/**
  * Type conversion utilities
  */
 

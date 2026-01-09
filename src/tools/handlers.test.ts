@@ -230,6 +230,380 @@ describe('Tool Handlers', () => {
         '- Location: When arriving at "Gym" (40.7128, -74.0060, 150m)',
       );
     });
+
+    it('formats reminder with basic daily recurrence', async () => {
+      const mockReminder = {
+        id: 'rec-1',
+        title: 'Daily Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'daily' as const,
+          interval: 1,
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({ action: 'read', id: 'rec-1' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: daily');
+    });
+
+    it('formats reminder with weekly recurrence and interval > 1', async () => {
+      const mockReminder = {
+        id: 'rec-2',
+        title: 'Biweekly Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'weekly' as const,
+          interval: 2,
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({ action: 'read', id: 'rec-2' });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: Every 2 weeks');
+    });
+
+    it('formats reminder with daysOfWeek (weekdays)', async () => {
+      const mockReminder = {
+        id: 'rec-weekdays',
+        title: 'Weekday Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'weekly' as const,
+          interval: 1,
+          daysOfWeek: [
+            'monday' as const,
+            'tuesday' as const,
+            'wednesday' as const,
+            'thursday' as const,
+            'friday' as const,
+          ],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-weekdays',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain(
+        '- Repeats: weekly on Monday, Tuesday, Wednesday, Thursday, Friday',
+      );
+    });
+
+    it('formats reminder with daysOfMonth', async () => {
+      const mockReminder = {
+        id: 'rec-monthly',
+        title: 'Monthly Reminder',
+        isCompleted: false,
+        list: 'Personal',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfMonth: [1, 15],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-monthly',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on day 1, 15');
+    });
+
+    it('formats reminder with daysOfMonth negative (last day)', async () => {
+      const mockReminder = {
+        id: 'rec-last-day',
+        title: 'Last Day Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfMonth: [-1],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-last-day',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on day 1 from end');
+    });
+
+    it('formats reminder with monthsOfYear', async () => {
+      const mockReminder = {
+        id: 'rec-quarterly',
+        title: 'Quarterly Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'yearly' as const,
+          interval: 1,
+          monthsOfYear: [1, 4, 7, 10],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-quarterly',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: yearly in Jan, Apr, Jul, Oct');
+    });
+
+    it('formats reminder with setPositions (first Monday)', async () => {
+      const mockReminder = {
+        id: 'rec-first-monday',
+        title: 'First Monday Reminder',
+        isCompleted: false,
+        list: 'Personal',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['monday' as const],
+          setPositions: [1],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-first-monday',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Monday (1st)');
+    });
+
+    it('formats reminder with setPositions (last Friday)', async () => {
+      const mockReminder = {
+        id: 'rec-last-friday',
+        title: 'Last Friday Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['friday' as const],
+          setPositions: [-1],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-last-friday',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Friday (last)');
+    });
+
+    it('formats reminder with setPositions (2nd and 3rd)', async () => {
+      const mockReminder = {
+        id: 'rec-2nd-3rd',
+        title: '2nd and 3rd Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['monday' as const],
+          setPositions: [2, 3],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-2nd-3rd',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Monday (2nd, 3rd)');
+    });
+
+    it('formats reminder with weeksOfYear', async () => {
+      const mockReminder = {
+        id: 'rec-weeks',
+        title: 'Specific Weeks Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'yearly' as const,
+          interval: 1,
+          weeksOfYear: [1, 26, 52],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-weeks',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: yearly in week 1, 26, 52');
+    });
+
+    it('formats reminder with daysOfYear', async () => {
+      const mockReminder = {
+        id: 'rec-days-year',
+        title: 'First and Last Day',
+        isCompleted: false,
+        list: 'Personal',
+        recurrence: {
+          frequency: 'yearly' as const,
+          interval: 1,
+          daysOfYear: [1, -1],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-days-year',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: yearly on year day 1, -1');
+    });
+
+    it('formats reminder with recurrence endDate', async () => {
+      const mockReminder = {
+        id: 'rec-end',
+        title: 'Limited Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'weekly' as const,
+          interval: 1,
+          endDate: '2025-12-31',
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-end',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: weekly until 2025-12-31');
+    });
+
+    it('formats reminder with recurrence occurrenceCount', async () => {
+      const mockReminder = {
+        id: 'rec-count',
+        title: '10 Times Reminder',
+        isCompleted: false,
+        list: 'Personal',
+        recurrence: {
+          frequency: 'daily' as const,
+          interval: 1,
+          occurrenceCount: 10,
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-count',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: daily (10 times)');
+    });
+
+    it('formats reminder with setPositions 2nd to last', async () => {
+      const mockReminder = {
+        id: 'rec-2nd-last',
+        title: '2nd to Last Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['monday' as const],
+          setPositions: [-2],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-2nd-last',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Monday (2nd to last)');
+    });
+
+    it('formats reminder with setPositions 4th', async () => {
+      const mockReminder = {
+        id: 'rec-4th',
+        title: '4th Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['wednesday' as const],
+          setPositions: [4],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-4th',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Wednesday (4th)');
+    });
+
+    it('formats reminder with setPositions 3rd from end', async () => {
+      const mockReminder = {
+        id: 'rec-3rd-end',
+        title: '3rd from End Reminder',
+        isCompleted: false,
+        list: 'Work',
+        recurrence: {
+          frequency: 'monthly' as const,
+          interval: 1,
+          daysOfWeek: ['friday' as const],
+          setPositions: [-3],
+        },
+      };
+      mockReminderRepository.findReminderById.mockResolvedValue(mockReminder);
+
+      const result = await handleReadReminders({
+        action: 'read',
+        id: 'rec-3rd-end',
+      });
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('- Repeats: monthly on Friday (3th from end)');
+    });
   });
 
   describe('handleCreateReminder', () => {

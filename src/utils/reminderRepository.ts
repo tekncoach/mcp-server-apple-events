@@ -4,6 +4,7 @@
  */
 
 import type {
+  DayOfWeek,
   Geofence,
   Recurrence,
   Reminder,
@@ -24,6 +25,8 @@ import {
   addOptionalArg,
   addOptionalBooleanArg,
   addOptionalNumberArg,
+  addOptionalNumberArrayArg,
+  addOptionalStringArrayArg,
   nullToUndefined,
 } from './helpers.js';
 
@@ -41,6 +44,22 @@ class ReminderRepository {
     };
   }
 
+  private mapDayOfWeek(day: string): DayOfWeek {
+    const d = day.toLowerCase();
+    if (
+      d === 'sunday' ||
+      d === 'monday' ||
+      d === 'tuesday' ||
+      d === 'wednesday' ||
+      d === 'thursday' ||
+      d === 'friday' ||
+      d === 'saturday'
+    ) {
+      return d;
+    }
+    return 'monday';
+  }
+
   private mapRecurrence(
     recurrence: RecurrenceJSON | null,
   ): Recurrence | undefined {
@@ -53,12 +72,34 @@ class ReminderRepository {
       freq === 'yearly'
         ? freq
         : 'daily';
-    return {
+    const result: Recurrence = {
       frequency,
       interval: recurrence.interval,
-      endDate: recurrence.endDate ?? undefined,
-      occurrenceCount: recurrence.occurrenceCount ?? undefined,
     };
+    if (recurrence.endDate) result.endDate = recurrence.endDate;
+    if (recurrence.occurrenceCount)
+      result.occurrenceCount = recurrence.occurrenceCount;
+    if (recurrence.daysOfWeek && recurrence.daysOfWeek.length > 0) {
+      result.daysOfWeek = recurrence.daysOfWeek.map((d) =>
+        this.mapDayOfWeek(d),
+      );
+    }
+    if (recurrence.daysOfMonth && recurrence.daysOfMonth.length > 0) {
+      result.daysOfMonth = recurrence.daysOfMonth;
+    }
+    if (recurrence.monthsOfYear && recurrence.monthsOfYear.length > 0) {
+      result.monthsOfYear = recurrence.monthsOfYear;
+    }
+    if (recurrence.weeksOfYear && recurrence.weeksOfYear.length > 0) {
+      result.weeksOfYear = recurrence.weeksOfYear;
+    }
+    if (recurrence.daysOfYear && recurrence.daysOfYear.length > 0) {
+      result.daysOfYear = recurrence.daysOfYear;
+    }
+    if (recurrence.setPositions && recurrence.setPositions.length > 0) {
+      result.setPositions = recurrence.setPositions;
+    }
+    return result;
   }
 
   private mapReminder(reminder: ReminderJSON): Reminder {
@@ -165,6 +206,36 @@ class ReminderRepository {
       '--recurrenceOccurrenceCount',
       data.recurrenceOccurrenceCount,
     );
+    addOptionalStringArrayArg(
+      args,
+      '--recurrenceDaysOfWeek',
+      data.recurrenceDaysOfWeek,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceDaysOfMonth',
+      data.recurrenceDaysOfMonth,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceMonthsOfYear',
+      data.recurrenceMonthsOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceWeeksOfYear',
+      data.recurrenceWeeksOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceDaysOfYear',
+      data.recurrenceDaysOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceSetPositions',
+      data.recurrenceSetPositions,
+    );
 
     return executeCli<ReminderJSON>(args);
   }
@@ -192,6 +263,36 @@ class ReminderRepository {
       args,
       '--recurrenceOccurrenceCount',
       data.recurrenceOccurrenceCount,
+    );
+    addOptionalStringArrayArg(
+      args,
+      '--recurrenceDaysOfWeek',
+      data.recurrenceDaysOfWeek,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceDaysOfMonth',
+      data.recurrenceDaysOfMonth,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceMonthsOfYear',
+      data.recurrenceMonthsOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceWeeksOfYear',
+      data.recurrenceWeeksOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceDaysOfYear',
+      data.recurrenceDaysOfYear,
+    );
+    addOptionalNumberArrayArg(
+      args,
+      '--recurrenceSetPositions',
+      data.recurrenceSetPositions,
     );
     addOptionalBooleanArg(args, '--clearRecurrence', data.clearRecurrence);
 

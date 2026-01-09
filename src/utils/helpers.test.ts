@@ -7,6 +7,8 @@ import {
   addOptionalArg,
   addOptionalBooleanArg,
   addOptionalNumberArg,
+  addOptionalNumberArrayArg,
+  addOptionalStringArrayArg,
   nullToUndefined,
 } from './helpers.js';
 
@@ -69,6 +71,100 @@ describe('helpers', () => {
       const args: string[] = [];
       addOptionalNumberArg(args, '--priority', undefined);
       expect(args).toEqual([]);
+    });
+  });
+
+  describe('addOptionalStringArrayArg', () => {
+    it('should add comma-separated string array argument', () => {
+      const args: string[] = [];
+      addOptionalStringArrayArg(args, '--recurrenceDaysOfWeek', [
+        'monday',
+        'wednesday',
+        'friday',
+      ]);
+      expect(args).toEqual([
+        '--recurrenceDaysOfWeek',
+        'monday,wednesday,friday',
+      ]);
+    });
+
+    it('should add single element array', () => {
+      const args: string[] = [];
+      addOptionalStringArrayArg(args, '--recurrenceDaysOfWeek', ['monday']);
+      expect(args).toEqual(['--recurrenceDaysOfWeek', 'monday']);
+    });
+
+    it('should not add argument when value is undefined', () => {
+      const args: string[] = [];
+      addOptionalStringArrayArg(args, '--recurrenceDaysOfWeek', undefined);
+      expect(args).toEqual([]);
+    });
+
+    it('should not add argument when array is empty', () => {
+      const args: string[] = [];
+      addOptionalStringArrayArg(args, '--recurrenceDaysOfWeek', []);
+      expect(args).toEqual([]);
+    });
+
+    it('should handle all days of week', () => {
+      const args: string[] = [];
+      addOptionalStringArrayArg(args, '--recurrenceDaysOfWeek', [
+        'sunday',
+        'monday',
+        'tuesday',
+        'wednesday',
+        'thursday',
+        'friday',
+        'saturday',
+      ]);
+      expect(args).toEqual([
+        '--recurrenceDaysOfWeek',
+        'sunday,monday,tuesday,wednesday,thursday,friday,saturday',
+      ]);
+    });
+  });
+
+  describe('addOptionalNumberArrayArg', () => {
+    it('should add comma-separated number array argument', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceDaysOfMonth', [1, 15]);
+      expect(args).toEqual(['--recurrenceDaysOfMonth', '1,15']);
+    });
+
+    it('should add single element array', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceDaysOfMonth', [1]);
+      expect(args).toEqual(['--recurrenceDaysOfMonth', '1']);
+    });
+
+    it('should not add argument when value is undefined', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceDaysOfMonth', undefined);
+      expect(args).toEqual([]);
+    });
+
+    it('should not add argument when array is empty', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceDaysOfMonth', []);
+      expect(args).toEqual([]);
+    });
+
+    it('should handle negative numbers (for last days)', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceDaysOfMonth', [1, -1]);
+      expect(args).toEqual(['--recurrenceDaysOfMonth', '1,-1']);
+    });
+
+    it('should handle months of year (1-12)', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceMonthsOfYear', [1, 6, 12]);
+      expect(args).toEqual(['--recurrenceMonthsOfYear', '1,6,12']);
+    });
+
+    it('should handle set positions', () => {
+      const args: string[] = [];
+      addOptionalNumberArrayArg(args, '--recurrenceSetPositions', [1, -1]);
+      expect(args).toEqual(['--recurrenceSetPositions', '1,-1']);
     });
   });
 
