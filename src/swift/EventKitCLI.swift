@@ -10,7 +10,8 @@ struct ReadResult: Codable { let lists: [ListJSON]; let reminders: [ReminderJSON
 struct DeleteResult: Codable { let id: String; let deleted = true }
 struct DeleteListResult: Codable { let title: String; let deleted = true }
 struct GeofenceJSON: Codable { let title: String, latitude: Double, longitude: Double, radius: Double, proximity: String }
-struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int?, completionDate: String?, geofence: GeofenceJSON? }
+struct RecurrenceJSON: Codable { let frequency: String, interval: Int, endDate: String?, occurrenceCount: Int? }
+struct ReminderJSON: Codable { let id: String, title: String, isCompleted: Bool, list: String, notes: String?, url: String?, dueDate: String?, priority: Int?, completionDate: String?, geofence: GeofenceJSON?, recurrence: RecurrenceJSON? }
 struct ListJSON: Codable { let id: String, title: String }
 struct EventJSON: Codable { let id: String, title: String, calendar: String, startDate: String, endDate: String, notes: String?, location: String?, url: String?, isAllDay: Bool }
 struct CalendarJSON: Codable { let id: String, title: String }
@@ -255,7 +256,36 @@ class RemindersManager {
         }
     }
 
-    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?, isCompleted: Bool?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?) throws -> ReminderJSON {
+    private func createRecurrenceRule(frequency: String, interval: Int?, endDate: String?, occurrenceCount: Int?) -> EKRecurrenceRule? {
+        let freq: EKRecurrenceFrequency
+        switch frequency.lowercased() {
+        case "daily": freq = .daily
+        case "weekly": freq = .weekly
+        case "monthly": freq = .monthly
+        case "yearly": freq = .yearly
+        default: return nil
+        }
+
+        var recurrenceEnd: EKRecurrenceEnd? = nil
+        if let endDateStr = endDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.timeZone = TimeZone.current
+            if let date = formatter.date(from: endDateStr) {
+                recurrenceEnd = EKRecurrenceEnd(end: date)
+            }
+        } else if let count = occurrenceCount, count > 0 {
+            recurrenceEnd = EKRecurrenceEnd(occurrenceCount: count)
+        }
+
+        return EKRecurrenceRule(
+            recurrenceWith: freq,
+            interval: interval ?? 1,
+            end: recurrenceEnd
+        )
+    }
+
+    func createReminder(title: String, listName: String?, notes: String?, urlString: String?, dueDateString: String?, priority: Int?, isCompleted: Bool?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?, recurrenceFrequency: String?, recurrenceInterval: Int?, recurrenceEndDate: String?, recurrenceOccurrenceCount: Int?) throws -> ReminderJSON {
         let reminder = EKReminder(eventStore: eventStore)
         reminder.calendar = try findList(named: listName)
         reminder.title = title
@@ -297,11 +327,16 @@ class RemindersManager {
             reminder.addAlarm(alarm)
         }
 
+        // Handle recurrence
+        if let freqStr = recurrenceFrequency, let rule = createRecurrenceRule(frequency: freqStr, interval: recurrenceInterval, endDate: recurrenceEndDate, occurrenceCount: recurrenceOccurrenceCount) {
+            reminder.addRecurrenceRule(rule)
+        }
+
         try eventStore.save(reminder, commit: true)
         return reminder.toJSON()
     }
 
-    func updateReminder(id: String, newTitle: String?, listName: String?, notes: String?, urlString: String?, isCompleted: Bool?, dueDateString: String?, priority: Int?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?) throws -> ReminderJSON {
+    func updateReminder(id: String, newTitle: String?, listName: String?, notes: String?, urlString: String?, isCompleted: Bool?, dueDateString: String?, priority: Int?, geofenceTitle: String?, geofenceLatitude: Double?, geofenceLongitude: Double?, geofenceRadius: Double?, geofenceProximity: String?, recurrenceFrequency: String?, recurrenceInterval: Int?, recurrenceEndDate: String?, recurrenceOccurrenceCount: Int?, clearRecurrence: Bool?) throws -> ReminderJSON {
         guard let reminder = findReminder(withId: id) else { throw NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "ID '\(id)' not found."]) }
         if let newTitle = newTitle { reminder.title = newTitle }
         if let priority = priority { reminder.priority = priority }
@@ -393,6 +428,26 @@ class RemindersManager {
                     let alarm = createGeofenceAlarm(title: finalTitle, latitude: lat, longitude: lng, radius: finalRadius, proximity: finalProximity)
                     reminder.addAlarm(alarm)
                 }
+            }
+        }
+
+        // Handle recurrence: add, update, or remove
+        if clearRecurrence == true {
+            // Remove all recurrence rules
+            if let rules = reminder.recurrenceRules {
+                for rule in rules {
+                    reminder.removeRecurrenceRule(rule)
+                }
+            }
+        } else if let freqStr = recurrenceFrequency {
+            // Remove existing rules before adding new one
+            if let rules = reminder.recurrenceRules {
+                for rule in rules {
+                    reminder.removeRecurrenceRule(rule)
+                }
+            }
+            if let rule = createRecurrenceRule(frequency: freqStr, interval: recurrenceInterval, endDate: recurrenceEndDate, occurrenceCount: recurrenceOccurrenceCount) {
+                reminder.addRecurrenceRule(rule)
             }
         }
 
@@ -639,6 +694,31 @@ extension EKReminder {
         return nil
     }
 
+    func getRecurrence() -> RecurrenceJSON? {
+        guard let rules = self.recurrenceRules, let rule = rules.first else { return nil }
+        let frequencyStr: String
+        switch rule.frequency {
+        case .daily: frequencyStr = "daily"
+        case .weekly: frequencyStr = "weekly"
+        case .monthly: frequencyStr = "monthly"
+        case .yearly: frequencyStr = "yearly"
+        @unknown default: frequencyStr = "daily"
+        }
+        var endDateStr: String? = nil
+        var occurrenceCount: Int? = nil
+        if let end = rule.recurrenceEnd {
+            if let endDate = end.endDate {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                formatter.timeZone = TimeZone.current
+                endDateStr = formatter.string(from: endDate)
+            } else if end.occurrenceCount > 0 {
+                occurrenceCount = end.occurrenceCount
+            }
+        }
+        return RecurrenceJSON(frequency: frequencyStr, interval: rule.interval, endDate: endDateStr, occurrenceCount: occurrenceCount)
+    }
+
     func toJSON() -> ReminderJSON {
         let completionDateStr = self.completionDate.map { Static.completionDateFormatter.string(from: $0) }
         return ReminderJSON(
@@ -651,7 +731,8 @@ extension EKReminder {
             dueDate: formatDueDateWithTimezone(from: self.dueDateComponents, timeZoneHint: self.timeZone),
             priority: self.priority > 0 ? self.priority : nil,
             completionDate: completionDateStr,
-            geofence: self.getGeofence()
+            geofence: self.getGeofence(),
+            recurrence: self.getRecurrence()
         )
     }
 }
@@ -779,7 +860,11 @@ func main() {
                     geofenceLatitude: parser.get("geofenceLatitude").flatMap { Double($0) },
                     geofenceLongitude: parser.get("geofenceLongitude").flatMap { Double($0) },
                     geofenceRadius: parser.get("geofenceRadius").flatMap { Double($0) },
-                    geofenceProximity: parser.get("geofenceProximity")
+                    geofenceProximity: parser.get("geofenceProximity"),
+                    recurrenceFrequency: parser.get("recurrenceFrequency"),
+                    recurrenceInterval: parser.get("recurrenceInterval").flatMap { Int($0) },
+                    recurrenceEndDate: parser.get("recurrenceEndDate"),
+                    recurrenceOccurrenceCount: parser.get("recurrenceOccurrenceCount").flatMap { Int($0) }
                 )
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "update":
@@ -798,7 +883,12 @@ func main() {
                     geofenceLatitude: parser.get("geofenceLatitude").flatMap { Double($0) },
                     geofenceLongitude: parser.get("geofenceLongitude").flatMap { Double($0) },
                     geofenceRadius: parser.get("geofenceRadius").flatMap { Double($0) },
-                    geofenceProximity: parser.get("geofenceProximity")
+                    geofenceProximity: parser.get("geofenceProximity"),
+                    recurrenceFrequency: parser.get("recurrenceFrequency"),
+                    recurrenceInterval: parser.get("recurrenceInterval").flatMap { Int($0) },
+                    recurrenceEndDate: parser.get("recurrenceEndDate"),
+                    recurrenceOccurrenceCount: parser.get("recurrenceOccurrenceCount").flatMap { Int($0) },
+                    clearRecurrence: parser.get("clearRecurrence").map { $0 == "true" }
                 )
                 print(String(data: try encoder.encode(StandardOutput(result: reminder)), encoding: .utf8)!)
             case "delete":

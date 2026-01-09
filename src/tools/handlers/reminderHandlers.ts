@@ -4,7 +4,11 @@
  */
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { Geofence, RemindersToolArgs } from '../../types/index.js';
+import type {
+  Geofence,
+  Recurrence,
+  RemindersToolArgs,
+} from '../../types/index.js';
 import { handleAsyncOperation } from '../../utils/errorHandling.js';
 import { formatMultilineNotes } from '../../utils/helpers.js';
 import { reminderRepository } from '../../utils/reminderRepository.js';
@@ -27,6 +31,25 @@ import {
 const formatGeofence = (geofence: Geofence): string => {
   const action = geofence.proximity === 'leave' ? 'leaving' : 'arriving at';
   return `When ${action} "${geofence.title}" (${geofence.latitude.toFixed(4)}, ${geofence.longitude.toFixed(4)}, ${geofence.radius}m)`;
+};
+
+/**
+ * Formats a recurrence as a human-readable string
+ */
+const formatRecurrence = (recurrence: Recurrence): string => {
+  const interval =
+    recurrence.interval > 1 ? `Every ${recurrence.interval} ` : '';
+  const frequency =
+    recurrence.interval > 1
+      ? `${recurrence.frequency.replace('ly', '')}s`
+      : recurrence.frequency.replace('ly', '');
+  let result = `${interval}${frequency}`;
+  if (recurrence.endDate) {
+    result += ` until ${recurrence.endDate}`;
+  } else if (recurrence.occurrenceCount) {
+    result += ` (${recurrence.occurrenceCount} times)`;
+  }
+  return result;
 };
 
 /**
@@ -53,6 +76,7 @@ const formatReminderMarkdown = (reminder: {
   priority?: number;
   completionDate?: string;
   geofence?: Geofence;
+  recurrence?: Recurrence;
 }): string[] => {
   const lines: string[] = [];
   const checkbox = reminder.isCompleted ? '[x]' : '[ ]';
@@ -64,6 +88,8 @@ const formatReminderMarkdown = (reminder: {
   if (reminder.notes)
     lines.push(`  - Notes: ${formatMultilineNotes(reminder.notes)}`);
   if (reminder.dueDate) lines.push(`  - Due: ${reminder.dueDate}`);
+  if (reminder.recurrence)
+    lines.push(`  - Repeats: ${formatRecurrence(reminder.recurrence)}`);
   if (reminder.completionDate)
     lines.push(`  - Completed: ${reminder.completionDate}`);
   if (reminder.geofence)
@@ -90,6 +116,10 @@ export const handleCreateReminder = async (
       geofenceLongitude: validatedArgs.geofenceLongitude,
       geofenceRadius: validatedArgs.geofenceRadius,
       geofenceProximity: validatedArgs.geofenceProximity,
+      recurrenceFrequency: validatedArgs.recurrenceFrequency,
+      recurrenceInterval: validatedArgs.recurrenceInterval,
+      recurrenceEndDate: validatedArgs.recurrenceEndDate,
+      recurrenceOccurrenceCount: validatedArgs.recurrenceOccurrenceCount,
     });
     return formatSuccessMessage(
       'created',
@@ -119,6 +149,11 @@ export const handleUpdateReminder = async (
       geofenceLongitude: validatedArgs.geofenceLongitude,
       geofenceRadius: validatedArgs.geofenceRadius,
       geofenceProximity: validatedArgs.geofenceProximity,
+      recurrenceFrequency: validatedArgs.recurrenceFrequency,
+      recurrenceInterval: validatedArgs.recurrenceInterval,
+      recurrenceEndDate: validatedArgs.recurrenceEndDate,
+      recurrenceOccurrenceCount: validatedArgs.recurrenceOccurrenceCount,
+      clearRecurrence: validatedArgs.clearRecurrence,
     });
     return formatSuccessMessage(
       'updated',

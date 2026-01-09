@@ -15,6 +15,13 @@ export interface GeofenceJSON {
   proximity: string;
 }
 
+export interface RecurrenceJSON {
+  frequency: string;
+  interval: number;
+  endDate: string | null;
+  occurrenceCount: number | null;
+}
+
 export interface ReminderJSON {
   id: string;
   title: string;
@@ -26,6 +33,7 @@ export interface ReminderJSON {
   priority: number | null;
   completionDate: string | null;
   geofence: GeofenceJSON | null;
+  recurrence: RecurrenceJSON | null;
 }
 
 export interface ListJSON {
@@ -81,6 +89,10 @@ export interface CreateReminderData {
   geofenceLongitude?: number;
   geofenceRadius?: number;
   geofenceProximity?: string;
+  recurrenceFrequency?: string;
+  recurrenceInterval?: number;
+  recurrenceEndDate?: string;
+  recurrenceOccurrenceCount?: number;
 }
 
 export interface UpdateReminderData {
@@ -97,6 +109,11 @@ export interface UpdateReminderData {
   geofenceLongitude?: number;
   geofenceRadius?: number;
   geofenceProximity?: string;
+  recurrenceFrequency?: string;
+  recurrenceInterval?: number;
+  recurrenceEndDate?: string;
+  recurrenceOccurrenceCount?: number;
+  clearRecurrence?: boolean;
 }
 
 export interface CreateEventData {

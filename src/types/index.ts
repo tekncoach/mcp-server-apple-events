@@ -15,6 +15,16 @@ export interface Geofence {
 }
 
 /**
+ * Recurrence for repeating reminders
+ */
+export interface Recurrence {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: number;
+  endDate?: string;
+  occurrenceCount?: number;
+}
+
+/**
  * Reminder item interface
  */
 export interface Reminder {
@@ -28,6 +38,7 @@ export interface Reminder {
   priority?: number; // 0 = none, 1-4 = high, 5 = medium, 6-9 = low
   completionDate?: string; // Date when reminder was completed (read-only)
   geofence?: Geofence;
+  recurrence?: Recurrence;
 }
 
 /**
@@ -150,6 +161,12 @@ export interface RemindersToolArgs extends BaseToolArgs {
   geofenceLongitude?: number;
   geofenceRadius?: number;
   geofenceProximity?: 'enter' | 'leave';
+  // Recurrence parameters for repeating reminders
+  recurrenceFrequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  recurrenceInterval?: number;
+  recurrenceEndDate?: string;
+  recurrenceOccurrenceCount?: number;
+  clearRecurrence?: boolean;
 }
 
 export interface ListsToolArgs extends BaseToolArgs {

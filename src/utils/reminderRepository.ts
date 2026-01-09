@@ -3,10 +3,16 @@
  * Repository pattern implementation for reminder data access operations using EventKitCLI.
  */
 
-import type { Geofence, Reminder, ReminderList } from '../types/index.js';
+import type {
+  Geofence,
+  Recurrence,
+  Reminder,
+  ReminderList,
+} from '../types/index.js';
 import type {
   CreateReminderData,
   ListJSON,
+  RecurrenceJSON,
   ReminderJSON,
   ReminderReadResult,
   UpdateReminderData,
@@ -32,6 +38,26 @@ class ReminderRepository {
       longitude: geofence.longitude,
       radius: geofence.radius,
       proximity: geofence.proximity === 'leave' ? 'leave' : 'enter',
+    };
+  }
+
+  private mapRecurrence(
+    recurrence: RecurrenceJSON | null,
+  ): Recurrence | undefined {
+    if (!recurrence) return undefined;
+    const freq = recurrence.frequency.toLowerCase();
+    const frequency =
+      freq === 'daily' ||
+      freq === 'weekly' ||
+      freq === 'monthly' ||
+      freq === 'yearly'
+        ? freq
+        : 'daily';
+    return {
+      frequency,
+      interval: recurrence.interval,
+      endDate: recurrence.endDate ?? undefined,
+      occurrenceCount: recurrence.occurrenceCount ?? undefined,
     };
   }
 
@@ -70,6 +96,14 @@ class ReminderRepository {
       normalizedReminder.geofence = geofence;
     } else {
       delete normalizedReminder.geofence;
+    }
+
+    // Map recurrence if present, otherwise remove null value
+    const recurrence = this.mapRecurrence(reminder.recurrence);
+    if (recurrence) {
+      normalizedReminder.recurrence = recurrence;
+    } else {
+      delete normalizedReminder.recurrence;
     }
 
     return normalizedReminder;
@@ -122,6 +156,15 @@ class ReminderRepository {
     addOptionalNumberArg(args, '--geofenceLongitude', data.geofenceLongitude);
     addOptionalNumberArg(args, '--geofenceRadius', data.geofenceRadius);
     addOptionalArg(args, '--geofenceProximity', data.geofenceProximity);
+    // Recurrence parameters
+    addOptionalArg(args, '--recurrenceFrequency', data.recurrenceFrequency);
+    addOptionalNumberArg(args, '--recurrenceInterval', data.recurrenceInterval);
+    addOptionalArg(args, '--recurrenceEndDate', data.recurrenceEndDate);
+    addOptionalNumberArg(
+      args,
+      '--recurrenceOccurrenceCount',
+      data.recurrenceOccurrenceCount,
+    );
 
     return executeCli<ReminderJSON>(args);
   }
@@ -141,6 +184,16 @@ class ReminderRepository {
     addOptionalNumberArg(args, '--geofenceLongitude', data.geofenceLongitude);
     addOptionalNumberArg(args, '--geofenceRadius', data.geofenceRadius);
     addOptionalArg(args, '--geofenceProximity', data.geofenceProximity);
+    // Recurrence parameters
+    addOptionalArg(args, '--recurrenceFrequency', data.recurrenceFrequency);
+    addOptionalNumberArg(args, '--recurrenceInterval', data.recurrenceInterval);
+    addOptionalArg(args, '--recurrenceEndDate', data.recurrenceEndDate);
+    addOptionalNumberArg(
+      args,
+      '--recurrenceOccurrenceCount',
+      data.recurrenceOccurrenceCount,
+    );
+    addOptionalBooleanArg(args, '--clearRecurrence', data.clearRecurrence);
 
     return executeCli<ReminderJSON>(args);
   }

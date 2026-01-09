@@ -112,6 +112,33 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           description:
             "When to trigger the reminder: 'enter' when arriving at location, 'leave' when departing.",
         },
+        // Recurrence properties for repeating reminders
+        recurrenceFrequency: {
+          type: 'string',
+          enum: ['daily', 'weekly', 'monthly', 'yearly'],
+          description:
+            "How often the reminder repeats: 'daily', 'weekly', 'monthly', or 'yearly'.",
+        },
+        recurrenceInterval: {
+          type: 'number',
+          description:
+            'The interval between recurrences (e.g., 2 for every 2 weeks). Default is 1.',
+        },
+        recurrenceEndDate: {
+          type: 'string',
+          description:
+            "Optional end date for the recurrence. Format: 'YYYY-MM-DD' or 'YYYY-MM-DD HH:mm:ss'.",
+        },
+        recurrenceOccurrenceCount: {
+          type: 'number',
+          description:
+            'Optional number of times the reminder should repeat before stopping.',
+        },
+        clearRecurrence: {
+          type: 'boolean',
+          description:
+            'Set to true to remove an existing recurrence rule from the reminder (update only).',
+        },
         // Read filters
         filterList: {
           type: 'string',

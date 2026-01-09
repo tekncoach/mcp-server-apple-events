@@ -18,6 +18,9 @@ import {
   SafePrioritySchema,
   SafeProximitySchema,
   SafeRadiusSchema,
+  SafeRecurrenceFrequencySchema,
+  SafeRecurrenceIntervalSchema,
+  SafeRecurrenceOccurrenceCountSchema,
   SafeTextSchema,
   SafeUrlSchema,
   UpdateReminderListSchema,
@@ -271,6 +274,91 @@ describe('ValidationSchemas', () => {
         });
       });
     });
+
+    describe('Recurrence schemas', () => {
+      describe('SafeRecurrenceFrequencySchema', () => {
+        it('should validate valid frequency values', () => {
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse(undefined),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('daily'),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('weekly'),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('monthly'),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('yearly'),
+          ).not.toThrow();
+        });
+
+        it('should reject invalid frequency values', () => {
+          expect(() => SafeRecurrenceFrequencySchema.parse('hourly')).toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('biweekly'),
+          ).toThrow();
+          expect(() =>
+            SafeRecurrenceFrequencySchema.parse('unknown'),
+          ).toThrow();
+        });
+      });
+
+      describe('SafeRecurrenceIntervalSchema', () => {
+        it('should validate valid interval values', () => {
+          expect(() =>
+            SafeRecurrenceIntervalSchema.parse(undefined),
+          ).not.toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(1)).not.toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(2)).not.toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(10)).not.toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(100)).not.toThrow();
+        });
+
+        it('should reject interval values below 1', () => {
+          expect(() => SafeRecurrenceIntervalSchema.parse(0)).toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(-1)).toThrow();
+        });
+
+        it('should reject non-integer interval values', () => {
+          expect(() => SafeRecurrenceIntervalSchema.parse(1.5)).toThrow();
+          expect(() => SafeRecurrenceIntervalSchema.parse(2.7)).toThrow();
+        });
+      });
+
+      describe('SafeRecurrenceOccurrenceCountSchema', () => {
+        it('should validate valid occurrence count values', () => {
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(undefined),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(1),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(5),
+          ).not.toThrow();
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(100),
+          ).not.toThrow();
+        });
+
+        it('should reject occurrence count values below 1', () => {
+          expect(() => SafeRecurrenceOccurrenceCountSchema.parse(0)).toThrow();
+          expect(() => SafeRecurrenceOccurrenceCountSchema.parse(-1)).toThrow();
+        });
+
+        it('should reject non-integer occurrence count values', () => {
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(1.5),
+          ).toThrow();
+          expect(() =>
+            SafeRecurrenceOccurrenceCountSchema.parse(5.5),
+          ).toThrow();
+        });
+      });
+    });
   });
 
   describe('Tool-specific schemas', () => {
@@ -291,6 +379,10 @@ describe('ValidationSchemas', () => {
             geofenceLongitude: -122.4194,
             geofenceRadius: 100,
             geofenceProximity: 'enter',
+            recurrenceFrequency: 'weekly',
+            recurrenceInterval: 1,
+            recurrenceEndDate: '2024-12-31',
+            recurrenceOccurrenceCount: 10,
           },
           minimalInput: { title: 'Test reminder' },
           requiredFields: ['title'],
@@ -311,6 +403,10 @@ describe('ValidationSchemas', () => {
             geofenceLongitude: -74.006,
             geofenceRadius: 200,
             geofenceProximity: 'leave',
+            recurrenceFrequency: 'monthly',
+            recurrenceInterval: 2,
+            recurrenceEndDate: '2025-06-30',
+            clearRecurrence: false,
           },
           minimalInput: { id: '123' },
           requiredFields: ['id'],

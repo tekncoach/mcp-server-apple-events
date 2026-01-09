@@ -162,6 +162,23 @@ export const SafePrioritySchema = z
   .optional();
 
 /**
+ * Recurrence validation schemas
+ */
+export const SafeRecurrenceFrequencySchema = z
+  .enum(['daily', 'weekly', 'monthly', 'yearly'])
+  .optional();
+export const SafeRecurrenceIntervalSchema = z
+  .number()
+  .int('Recurrence interval must be an integer')
+  .min(1, 'Recurrence interval must be at least 1')
+  .optional();
+export const SafeRecurrenceOccurrenceCountSchema = z
+  .number()
+  .int('Occurrence count must be an integer')
+  .min(1, 'Occurrence count must be at least 1')
+  .optional();
+
+/**
  * Common field combinations for reusability
  */
 const GeofenceFields = {
@@ -172,6 +189,13 @@ const GeofenceFields = {
   geofenceProximity: SafeProximitySchema,
 };
 
+const RecurrenceFields = {
+  recurrenceFrequency: SafeRecurrenceFrequencySchema,
+  recurrenceInterval: SafeRecurrenceIntervalSchema,
+  recurrenceEndDate: SafeDateSchema,
+  recurrenceOccurrenceCount: SafeRecurrenceOccurrenceCountSchema,
+};
+
 const BaseReminderFields = {
   title: SafeTextSchema,
   dueDate: SafeDateSchema,
@@ -180,6 +204,7 @@ const BaseReminderFields = {
   targetList: SafeListNameSchema,
   priority: SafePrioritySchema,
   ...GeofenceFields,
+  ...RecurrenceFields,
 };
 
 export const SafeIdSchema = z.string().min(1, 'ID cannot be empty');
@@ -210,6 +235,8 @@ export const UpdateReminderSchema = z.object({
   targetList: SafeListNameSchema,
   priority: SafePrioritySchema,
   ...GeofenceFields,
+  ...RecurrenceFields,
+  clearRecurrence: z.boolean().optional(),
 });
 
 export const DeleteReminderSchema = z.object({

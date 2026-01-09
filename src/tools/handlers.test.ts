@@ -245,6 +245,7 @@ describe('Tool Handlers', () => {
         priority: null,
         completionDate: null,
         geofence: null,
+        recurrence: null,
       };
       mockReminderRepository.createReminder.mockResolvedValue(newReminder);
       const result = await handleCreateReminder({
@@ -274,6 +275,7 @@ describe('Tool Handlers', () => {
           radius: 200,
           proximity: 'enter',
         },
+        recurrence: null,
       };
       mockReminderRepository.createReminder.mockResolvedValue(newReminder);
 
@@ -319,6 +321,7 @@ describe('Tool Handlers', () => {
           radius: 100,
           proximity: 'leave',
         },
+        recurrence: null,
       };
       mockReminderRepository.createReminder.mockResolvedValue(newReminder);
 
@@ -356,6 +359,7 @@ describe('Tool Handlers', () => {
         priority: null,
         completionDate: null,
         geofence: null,
+        recurrence: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
       const result = await handleUpdateReminder({
@@ -386,6 +390,7 @@ describe('Tool Handlers', () => {
           radius: 300,
           proximity: 'leave',
         },
+        recurrence: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
 
@@ -433,6 +438,7 @@ describe('Tool Handlers', () => {
           radius: 500,
           proximity: 'enter',
         },
+        recurrence: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
 
@@ -472,6 +478,7 @@ describe('Tool Handlers', () => {
           radius: 100,
           proximity: 'leave',
         },
+        recurrence: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
 
@@ -501,6 +508,7 @@ describe('Tool Handlers', () => {
         priority: null,
         completionDate: null,
         geofence: null, // Geofence was removed
+        recurrence: null,
       };
       mockReminderRepository.updateReminder.mockResolvedValue(updatedReminder);
 
