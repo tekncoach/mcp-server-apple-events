@@ -180,7 +180,11 @@ class ReminderRepository {
 
   async findAllLists(): Promise<ReminderList[]> {
     const { lists } = await this.readAll();
-    return lists;
+    return lists.map((list) => ({
+      id: list.id,
+      title: list.title,
+      color: list.color ?? undefined,
+    }));
   }
 
   async createReminder(data: CreateReminderData): Promise<ReminderJSON> {
@@ -303,22 +307,21 @@ class ReminderRepository {
     await executeCli<unknown>(['--action', 'delete', '--id', id]);
   }
 
-  async createReminderList(name: string): Promise<ListJSON> {
-    return executeCli<ListJSON>(['--action', 'create-list', '--name', name]);
+  async createReminderList(name: string, color?: string): Promise<ListJSON> {
+    const args = ['--action', 'create-list', '--name', name];
+    addOptionalArg(args, '--color', color);
+    return executeCli<ListJSON>(args);
   }
 
   async updateReminderList(
     currentName: string,
-    newName: string,
+    newName?: string,
+    color?: string,
   ): Promise<ListJSON> {
-    return executeCli<ListJSON>([
-      '--action',
-      'update-list',
-      '--name',
-      currentName,
-      '--newName',
-      newName,
-    ]);
+    const args = ['--action', 'update-list', '--name', currentName];
+    addOptionalArg(args, '--newName', newName);
+    addOptionalArg(args, '--color', color);
+    return executeCli<ListJSON>(args);
   }
 
   async deleteReminderList(name: string): Promise<void> {

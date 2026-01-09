@@ -243,6 +243,11 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           type: 'string',
           description: 'The new name for the list (for update).',
         },
+        color: {
+          type: 'string',
+          description:
+            'Hex color for the list (e.g., "#FF5733"). For create and update actions.',
+        },
       },
       required: ['action'],
       dependentSchemas: {
@@ -252,7 +257,7 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
             { properties: { action: { const: 'create' } }, required: ['name'] },
             {
               properties: { action: { const: 'update' } },
-              required: ['name', 'newName'],
+              required: ['name'],
             },
             { properties: { action: { const: 'delete' } }, required: ['name'] },
           ],

@@ -25,7 +25,10 @@ export const handleReadReminderLists = async (): Promise<CallToolResult> => {
     return formatListMarkdown(
       'Reminder Lists',
       lists,
-      (list) => [`- ${list.title} (ID: ${list.id})`],
+      (list) => {
+        const colorPart = list.color ? ` [${list.color}]` : '';
+        return [`- ${list.title}${colorPart} (ID: ${list.id})`];
+      },
       'No reminder lists found.',
     );
   }, 'read reminder lists');
@@ -41,6 +44,7 @@ export const handleCreateReminderList = async (
     );
     const list = await reminderRepository.createReminderList(
       validatedArgs.name,
+      validatedArgs.color,
     );
     return formatSuccessMessage('created', 'list', list.title, list.id);
   }, 'create reminder list');
@@ -57,6 +61,7 @@ export const handleUpdateReminderList = async (
     const list = await reminderRepository.updateReminderList(
       validatedArgs.name,
       validatedArgs.newName,
+      validatedArgs.color,
     );
     return formatSuccessMessage('updated', 'list', list.title, list.id);
   }, 'update reminder list');

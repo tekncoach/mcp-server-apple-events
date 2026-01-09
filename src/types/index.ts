@@ -65,6 +65,7 @@ export interface Reminder {
 export interface ReminderList {
   id: string;
   title: string;
+  color?: string;
 }
 
 /**
