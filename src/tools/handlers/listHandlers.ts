@@ -62,6 +62,7 @@ export const handleUpdateReminderList = async (
       validatedArgs.name,
       validatedArgs.newName,
       validatedArgs.color,
+      validatedArgs.icon,
     );
     return formatSuccessMessage('updated', 'list', list.title, list.id);
   }, 'update reminder list');

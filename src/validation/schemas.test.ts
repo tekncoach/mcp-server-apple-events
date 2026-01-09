@@ -631,7 +631,16 @@ describe('ValidationSchemas', () => {
         expect(() => UpdateReminderListSchema.parse(validInput)).not.toThrow();
       });
 
-      it('should reject update without newName or color', () => {
+      it('should validate update list input with icon only', () => {
+        const validInput = {
+          name: 'Old Name',
+          icon: '🎯',
+        };
+
+        expect(() => UpdateReminderListSchema.parse(validInput)).not.toThrow();
+      });
+
+      it('should reject update without newName, color, or icon', () => {
         expect(() => UpdateReminderListSchema.parse({ name: 'Old' })).toThrow();
       });
 

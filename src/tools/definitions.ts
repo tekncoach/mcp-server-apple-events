@@ -248,6 +248,11 @@ const _EXTENDED_TOOLS: ExtendedTool[] = [
           description:
             'Hex color for the list (e.g., "#FF5733"). For create and update actions.',
         },
+        icon: {
+          type: 'string',
+          description:
+            'Emoji icon for the list (e.g., "🎯"). For update action only (via AppleScript).',
+        },
       },
       required: ['action'],
       dependentSchemas: {
