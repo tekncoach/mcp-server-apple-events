@@ -88,6 +88,11 @@ export const SafeHexColorSchema = z
   .string()
   .regex(HEX_COLOR_PATTERN, 'Color must be a valid hex color (e.g., #FF5733)')
   .optional();
+export const SafeEmojiSchema = z
+  .string()
+  .min(1, 'Icon cannot be empty')
+  .max(4, 'Icon must be a single emoji')
+  .optional();
 export const SafeSearchSchema = createOptionalSafeTextSchema(
   VALIDATION.MAX_SEARCH_LENGTH,
   'Search term',
@@ -221,9 +226,10 @@ export const UpdateReminderListSchema = z
     name: RequiredListNameSchema,
     newName: SafeListNameSchema,
     color: SafeHexColorSchema,
+    icon: SafeEmojiSchema,
   })
-  .refine((data) => data.newName || data.color, {
-    message: 'At least one of newName or color must be provided',
+  .refine((data) => data.newName || data.color || data.icon, {
+    message: 'At least one of newName, color, or icon must be provided',
   });
 
 export const DeleteReminderListSchema = z.object({

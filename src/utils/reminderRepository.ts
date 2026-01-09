@@ -111,7 +111,25 @@ class ReminderRepository {
     currentName: string,
     newName?: string,
     color?: string,
+    icon?: string,
   ): Promise<ListJSON> {
+    // Handle icon separately via AppleScript (not available in EventKit)
+    if (icon) {
+      const { setListEmblem } = await import('./applescriptList.js');
+      await setListEmblem(currentName, icon);
+    }
+
+    // If only icon was updated, we still need to return the list info
+    if (!newName && !color) {
+      // Just fetch current list info
+      const lists = await this.findAllLists();
+      const list = lists.find((l) => l.title === currentName);
+      if (!list) {
+        throw new Error(`List '${currentName}' not found.`);
+      }
+      return { id: list.id, title: list.title, color: list.color ?? null };
+    }
+
     const args = ['--action', 'update-list', '--name', currentName];
     addOptionalArg(args, '--newName', newName);
     addOptionalArg(args, '--color', color);
