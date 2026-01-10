@@ -37,9 +37,9 @@ export const handleReadReminderLists = async (): Promise<CallToolResult> => {
       'Reminder Lists',
       listsWithEmblems,
       (list) => {
-        const iconPart = list.icon ? ` ${list.icon}` : '';
+        const iconPart = list.icon ? `${list.icon} ` : '';
         const colorPart = list.color ? ` [${list.color}]` : '';
-        return [`-${iconPart} ${list.title}${colorPart} (ID: ${list.id})`];
+        return [`- ${iconPart}${list.title}${colorPart} (ID: ${list.id})`];
       },
       'No reminder lists found.',
     );
