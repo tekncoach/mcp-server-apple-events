@@ -220,7 +220,7 @@ describe('Tool Handlers', () => {
       const result = await handleReadReminderLists();
       const content = _getTextContent(result.content);
       expect(content).toContain('### Reminder Lists (Total: 1)');
-      expect(content).toContain('Inbox (ID: list-1)');
+      expect(content).toContain('- Inbox (ID: list-1)');
     });
 
     it('should return empty list message when no lists found', async () => {
