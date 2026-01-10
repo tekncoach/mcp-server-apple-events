@@ -5,6 +5,7 @@
 
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { ListsToolArgs } from '../../types/index.js';
+import { getListEmblem, parseEmblem } from '../../utils/applescriptList.js';
 import { handleAsyncOperation } from '../../utils/errorHandling.js';
 import { reminderRepository } from '../../utils/reminderRepository.js';
 import {
@@ -22,12 +23,23 @@ import {
 export const handleReadReminderLists = async (): Promise<CallToolResult> => {
   return handleAsyncOperation(async () => {
     const lists = await reminderRepository.findAllLists();
+
+    // Fetch emblems for all lists in parallel
+    const listsWithEmblems = await Promise.all(
+      lists.map(async (list) => {
+        const emblemStr = await getListEmblem(list.title);
+        const icon = parseEmblem(emblemStr);
+        return { ...list, icon };
+      }),
+    );
+
     return formatListMarkdown(
       'Reminder Lists',
-      lists,
+      listsWithEmblems,
       (list) => {
+        const iconPart = list.icon ? ` ${list.icon}` : '';
         const colorPart = list.color ? ` [${list.color}]` : '';
-        return [`- ${list.title}${colorPart} (ID: ${list.id})`];
+        return [`-${iconPart} ${list.title}${colorPart} (ID: ${list.id})`];
       },
       'No reminder lists found.',
     );
