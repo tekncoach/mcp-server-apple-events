@@ -32,6 +32,12 @@ jest.mock('../utils/reminderRepository.js');
 jest.mock('../utils/calendarRepository.js');
 jest.mock('../utils/errorHandling.js');
 
+// Mock AppleScript list functions for emblem/icon support
+jest.mock('../utils/applescriptList.js', () => ({
+  getListEmblem: jest.fn().mockResolvedValue(null),
+  parseEmblem: jest.fn().mockReturnValue(null),
+}));
+
 const mockReminderRepository = reminderRepository as jest.Mocked<
   typeof reminderRepository
 >;
@@ -214,7 +220,7 @@ describe('Tool Handlers', () => {
       const result = await handleReadReminderLists();
       const content = _getTextContent(result.content);
       expect(content).toContain('### Reminder Lists (Total: 1)');
-      expect(content).toContain('- Inbox (ID: list-1)');
+      expect(content).toContain('Inbox (ID: list-1)');
     });
 
     it('should return empty list message when no lists found', async () => {
@@ -223,6 +229,35 @@ describe('Tool Handlers', () => {
       const content = _getTextContent(result.content);
       expect(content).toContain('### Reminder Lists (Total: 0)');
       expect(content).toContain('No reminder lists found.');
+    });
+
+    it('should include icon when emblem is available', async () => {
+      const { getListEmblem, parseEmblem } =
+        require('../utils/applescriptList.js') as {
+          getListEmblem: jest.Mock;
+          parseEmblem: jest.Mock;
+        };
+      const mockLists = [
+        { id: 'list-1', title: 'Work', color: '#FF0000' },
+        { id: 'list-2', title: 'Personal', color: undefined },
+      ];
+      mockReminderRepository.findAllLists.mockResolvedValue(mockLists);
+      getListEmblem.mockImplementation((name: string) =>
+        name === 'Work'
+          ? Promise.resolve('{"Emoji" : "💼"}')
+          : Promise.resolve(null),
+      );
+      parseEmblem.mockImplementation((str: string | null) =>
+        str === '{"Emoji" : "💼"}' ? '💼' : null,
+      );
+
+      const result = await handleReadReminderLists();
+      const content = _getTextContent(result.content);
+
+      expect(content).toContain('💼 Work');
+      expect(content).toContain('[#FF0000]');
+      expect(getListEmblem).toHaveBeenCalledWith('Work');
+      expect(getListEmblem).toHaveBeenCalledWith('Personal');
     });
   });
 
